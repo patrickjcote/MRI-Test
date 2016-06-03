@@ -15,6 +15,8 @@
 
     // Test 3, commit and push from 6
 
+    // Test 4, push from 5, pull from 6
+
 int main(void)
 {
 
