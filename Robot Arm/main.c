@@ -17,6 +17,8 @@
 
     // Test 4, push from 5, pull from 6
 
+    // Test 7, merge conflicts, (Edit from 6)
+
 int main(void)
 {
 
