@@ -21,6 +21,7 @@
 //Pat Edit
 //Pat edit 3
 //Pat 4th commit
+//Bryce Edit 3
 #include <msp430.h>				
 
 int main(void) {
