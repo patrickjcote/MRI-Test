@@ -17,7 +17,7 @@
 //  July 2011
 //  Built with Code Composer Studio v5
 //***************************************************************************************
-//Bryce Edit
+//Bryce Edit 2
 #include <msp430.h>				
 
 int main(void) {
