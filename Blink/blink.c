@@ -18,6 +18,7 @@
 //  Built with Code Composer Studio v5
 //***************************************************************************************
 //Bryce Edit 2
+//Pat Edit
 #include <msp430.h>				
 
 int main(void) {
