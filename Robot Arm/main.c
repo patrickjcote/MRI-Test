@@ -18,6 +18,8 @@
     // Test 4, push from 5, pull from 6
     // Test 5 show bryce
 
+    // Test 7, merge conflicts? (Edit from ccs5)
+
 int main(void)
 {
 
