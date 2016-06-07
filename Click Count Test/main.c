@@ -1,8 +1,7 @@
 #include <msp430.h>
 
-#define STOP 0
-#define CCW -100
-#define CW 100
+volatile int clicks = 0;
+volatile int dir = 0;
 
 int main(void) {
 
@@ -13,40 +12,35 @@ int main(void) {
 	P2SEL = BIT1;
 
 	P2DIR &= ~BIT0;
+	P2IE |=  BIT0;                            // P2.0 interrupt enabled
+	P2IES |= BIT0;                            // P2.0 Hi/lo edge
+	P2REN |= BIT0;                            // Enable Pull Up on SW2 (P2.0)
+	P2IFG &= ~BIT0;                           // P2.0 IFG clear
 
 	TA1CTL = TASSEL_2 + MC_1;
 	TA1CCTL1 |= OUTMOD_7;
 	TA1CCR0 = 21000;
 	TA1CCR1 = 1500;
 
-	volatile int clicks = 0;
-	while(1){
-		motorDir(CCW);
-		while(clicks < 6){
-			clickWait();
-			clicks++;
-		}//while
-		motorDir(CW);
-		clicks = 0;
-		while(clicks < 6){
-			clickWait();
-			clicks++;
-		}//while
-		clicks = 0;
-	}
+	__bis_SR_register(GIE);
 
 	return 0;
-}
-
-void clickWait(){
-	while(P2IN & BIT0){
-		//no click
-	}
-	while(!(P2IN & BIT0)){
-		//click
-	}
-}
+}//main()
 
 int motorDir(int direction){
-	TA1CCR1 = 1590 + direction;
+	TA1CCR1 = 1500 + direction*200;
 }// motorDirection()
+
+// Port 2 interrupt service routine
+#pragma vector=PORT2_VECTOR
+__interrupt void Port_2(void)
+{
+	clicks++;
+	if(clicks > 6){
+		dir ^= 1;
+		motorDir(dir);
+		clicks = 0;
+	}
+
+	P2IFG &= ~BIT0;
+}
