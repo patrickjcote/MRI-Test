@@ -1,45 +1,52 @@
-#include <msp430.h> 
+#include <msp430.h>
+
+#define STOP 0
+#define CCW -100
+#define CW 100
 
 int main(void) {
 
 	WDTCTL = WDTPW | WDTHOLD;
 
-	P2DIR = 0xff;
+	P2DIR = BIT1;
 	P2OUT = 0x00;
 	P2SEL = BIT1;
+
+	P1DIR &= ~BIT4;
 
 	TA1CTL = TASSEL_2 + MC_1;
 	TA1CCTL1 |= OUTMOD_7;
 	TA1CCR0 = 21000;
 	TA1CCR1 = 1500;
 
-
-
-	while(1)
-	{
-		TA1CCR1 = 1590;
-		__delay_cycles(500000);
-		__delay_cycles(500000);
-		__delay_cycles(500000);
-		TA1CCR1 = 1300;
-		__delay_cycles(500000);
-		__delay_cycles(500000);
-		__delay_cycles(500000);
-		TA1CCR1 = 1590;
-		__delay_cycles(500000);
-		__delay_cycles(500000);
-		__delay_cycles(500000);
-		TA1CCR1 = 1700;
-		__delay_cycles(500000);
-		__delay_cycles(500000);
-		__delay_cycles(500000);
-
-
-
+	volatile int clicks = 0;
+	while(1){
+		motorDir(CCW);
+		while(clicks < 6){
+			clickWait();
+			clicks++;
+		}//while
+		motorDir(CW);
+		clicks = 0;
+		while(clicks < 6){
+			clickWait();
+			clicks++;
+		}//while
+		clicks = 0;
 	}
-
 
 	return 0;
 }
 
+void clickWait(){
+	while(P1IN & BIT4){
+		//no click
+	}
+	while(!(P1IN & BIT4)){
+		//click
+	}
+}
 
+int motorDir(int direction){
+	TA1CCR1 = 1590 + direction;
+}// motorDirection()
