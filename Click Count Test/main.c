@@ -12,7 +12,7 @@ int main(void) {
 	P2OUT = 0x00;
 	P2SEL = BIT1;
 
-	P1DIR &= ~BIT4;
+	P2DIR &= ~BIT0;
 
 	TA1CTL = TASSEL_2 + MC_1;
 	TA1CCTL1 |= OUTMOD_7;
@@ -39,10 +39,10 @@ int main(void) {
 }
 
 void clickWait(){
-	while(P1IN & BIT4){
+	while(P2IN & BIT0){
 		//no click
 	}
-	while(!(P1IN & BIT4)){
+	while(!(P2IN & BIT0)){
 		//click
 	}
 }
