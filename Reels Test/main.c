@@ -1,8 +1,7 @@
 #include <msp430.h>
 #include "reels.h"
 
-volatile int clicks = 0;
-volatile int motorPosition = 0;
+
 
 int main(void) {
 
@@ -10,13 +9,9 @@ int main(void) {
 
 	initReel();
 
-	__bis_SR_register(GIE);
-
-	motorPosition = 20;
+	reelDepth = 20;
 
 	pullUpReel();
-
-
 
 	return 0;
 }//main()
@@ -24,19 +19,19 @@ int main(void) {
 
 void initReel(){
 
-	//Limit Switch in
+	//Limit Switch input
 	P1DIR &= ~BIT4;				// Limit switch input on 1.4
 	P1IE |=  BIT4;				// 1.4 interrupt enabled
 	P1IES |= BIT4;				// 1.4 Hi/lo edge
-	P1REN |= BIT4;				// Enable Pull Up on SW2 (P1.4)
+	P1REN |= BIT4;				// Enable Pull Up (P1.4)
 	P1IFG &= ~BIT4;				// P1.4 IFG clear
-	//Click Count in
-	P2DIR &= ~BIT0;				// Limit switch input on 2.0
+	//Click Count input
+	P2DIR &= ~BIT0;				// Click count input on 2.0
 	P2IE |=  BIT0;				// P2.0 interrupt enabled
 	P2IES |= BIT0;				// P2.0 Hi/lo edge
-	P2REN |= BIT0;				// Enable Pull Up on SW2 (P2.0)
+	P2REN |= BIT0;				// Enable Pull Up (P2.0)
 	P2IFG &= ~BIT0;				// P2.0 IFG clear
-	//Motor PWM Out
+	//Motor PWM Output
 	P2DIR |= BIT4;				//PWM Output on P2.4
 	P2SEL |= BIT4;				//TA1.2 Output on P2.4
 	TA1CTL = TASSEL_2 + MC_1;	//Set Clock
@@ -44,33 +39,51 @@ void initReel(){
 	TA1CCR0 = PWM_PERIOD;
 	TA1CCR2 = MOTOR_STOP;
 
-	clicks = 0;
+	volatile int clicks = 0;
+	volatile int reelDepth = 0;
+
+	__bis_SR_register(GIE);
 
 }//init_reel()
 
-void pullUpReel(){
+int currentDepth(){
 
-	while(motorPosition > 0){
+	//TODO: Lookup table or conversion math for feet to clicks
+
+}//currentDepth()
+
+int goToDepth(int feet){
+
+	//TODO: Lookup table or conversion math for feet to clicks
+
+}//goToDepth()
+
+int pullUpReel(){
+
+	while(reelDepth > 0){
 		TA1CCR2 = MOTOR_UP;
+		//TODO: Autolevel code
 	}
 	TA1CCR2 = MOTOR_STOP;
-}
 
+	return 0;
+}//pullUpReel()
 
 
 // Port 1 ISR
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
 {
-	motorPosition = 0;
+	//Hardware interrupt for limit switch
+	reelDepth = 0;
 	P1IFG &= ~BIT4;
 }
-
 
 // Port 2 ISR
 #pragma vector=PORT2_VECTOR
 __interrupt void Port_2(void)
 {
+	//Hardware interrupt for click counter
 	clicks++;
 	P2IFG &= ~BIT0;
 }

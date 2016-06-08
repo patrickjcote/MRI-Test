@@ -15,9 +15,11 @@
 
 
 extern volatile int clicks;
-extern volatile int motorPosition;
+extern volatile int reelDepth;
 
 void initReel();
-void pullUpReel();
+int currentDepth();
+int goToDepth(int feet);
+int pullUpReel();
 
 #endif
