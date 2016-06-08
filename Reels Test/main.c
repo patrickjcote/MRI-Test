@@ -1,6 +1,8 @@
 #include <msp430.h>
 #include "reels.h"
 
+volatile int clicks = 0;
+volatile int motorPosition = 0;
 
 int main(void) {
 
@@ -8,9 +10,13 @@ int main(void) {
 
 	initReel();
 
-	//pullUpReel();
-
 	__bis_SR_register(GIE);
+
+	motorPosition = 20;
+
+	pullUpReel();
+
+
 
 	return 0;
 }//main()
@@ -36,10 +42,29 @@ void initReel(){
 	TA1CTL = TASSEL_2 + MC_1;	//Set Clock
 	TA1CCTL2 |= OUTMOD_7;		//Output mode
 	TA1CCR0 = PWM_PERIOD;
-	TA1CCR2 = MOTOR_NEUTRAL;
+	TA1CCR2 = MOTOR_STOP;
+
+	clicks = 0;
 
 }//init_reel()
 
+void pullUpReel(){
+
+	while(motorPosition > 0){
+		TA1CCR2 = MOTOR_UP;
+	}
+	TA1CCR2 = MOTOR_STOP;
+}
+
+
+
+// Port 1 ISR
+#pragma vector=PORT1_VECTOR
+__interrupt void Port_1(void)
+{
+	motorPosition = 0;
+	P1IFG &= ~BIT4;
+}
 
 
 // Port 2 ISR
