@@ -9,11 +9,8 @@
  *
  * Pinout
  * Pin 1.0 I2c Master SDA       Configured to interface to the HMC Magnetometer
- * Pin 1.1 I2C Masster SCL
- * Pin 1.2 PWM out for y axis control
- * Pin 1.6 I2C Slave SCL  (Slave to master controller)
- * Pin 1.7 I2C Slave SDA
- * Pin 2.1 PWM out for x axis control
+ * Pin 1.3 I2C Masster SCL
+ * Pin 2.0 PWM out for y axis control
  *
  * Sending a # followed by the address of the device returns 13 values.  This consists of the following
  * 0-number of bytes being returned
@@ -23,18 +20,7 @@
  * 4-LSB of y axis accelerometer data
  * 5-MSB of z axis accelerometer data
  * 6-LSB of z axis accelerometer data
- * 7-MSB of x axis gyro data
- * 8-LSB of x axis gyro data
- * 9-MSB of x axis gyro data
- * 10-LSB of x axis gyro data
- * 11-MSB of x axis gyro data
- * 12-LSB of x axis gyro data
- *
- * The accelerometer value is unsigned but has an offset of 1024 since it is a 10 bit value.  In other words a value of 1024 means no acceleration being experienced
- *   A full scale value indicates 2Gs worth of acceleration
- * The gyro value is unsigned but has an offset of 0x7FFF or 32767.  In other words the value 32767 means no moment of inertia being measured
- * A full scale value of 0xffff means it is experiencing 250 dps (degrees per second)
- *
+\ *
  * You can also activate the servos to auto level the platform by executing a * followed by the address and then a 5 digit number.  The five digit number sequence can only be a value of 0,1,2.
  *
  * mode 0:  no auto leveling occuring.
@@ -44,28 +30,21 @@
  *
  */
 
-#define addr_mpu 0xD2	// address of gyro/accel
 #define ADXL_ADDR 0x3A		//Accelerometer Address
-#define PWMMAX	4500		// PWM high limit
-#define PWMMIN  1500		// PWM low limit
+#define PWMMAX	4000		// PWM high limit
+#define PWMMIN  2000		// PWM low limit
 #define PWMNEU  3000		// PWM Neutral limit
-#define kcontroller 1		//controller gain to set auto-level
-#define kcontrollerd 8
 
 unsigned char TXData[64],RXData[64];		//Buffers for the Slave of ths device
 volatile int TXData_ptr=0,RXData_ptr=0,i2crxflag=0;		//Pointers and flags for the slave device
 volatile int sampstate=0,i2cmode=0;  //Sampstate can be 0-idle 1-pumping forward 2-pumping reverse 3-moving sampler
-volatile unsigned int pwmread[]={0,0,0,0,0,0,0,0},pwmval[8],pwmflag=0,pwmtimeout=0;
 int conv_char_hex(char *,int );
-void init_L3G4200D();
-void read_L3G4200D( int *);
 void init_ADXL(void);
 void read_ADXL(int *);
 
 
 int main(void) {
-	int accelvec[3],k,PWMVAL[]={PWMNEU,PWMNEU};
-	unsigned int gyrovec[3];
+	int accelvec[3],k;
 	float pwmfloatx=0,pwmfloaty=0;
 	int pwmcount=0,autolevel=0;
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
@@ -77,41 +56,24 @@ int main(void) {
 	DCOCTL = CALDCO_16MHZ;
 	for (k=0;k<200;k++)
 		__delay_cycles(50000);
-	P1SEL |= BIT6 + BIT7;                     // Assign I2C pins to USCI_B0
-	P1SEL2|= BIT6 + BIT7;                     // Assign I2C pins to USCI_B0
-	P1DIR &=~(BIT0+BIT1);
-
-	UCB0CTL1 |= UCSWRST;                      // Enable SW reset
-	UCB0CTL0 = UCMODE_3 + UCSYNC;             // I2C Slave, synchronous mode
-	UCB0I2COA = 0x25;            		// Own Address.  Change this when you specialze this code
-	UCB0CTL1 &= ~UCSWRST;                     // Clear SW reset, resume operation
-	UCB0I2CIE |= UCSTTIE;                     // Enable STT interrupt
-	IE2 |= (UCB0TXIE+UCB0RXIE);                          // Enable TX interrupt
-	//  The code below is an ADC code specific to reading the internal temperature
 
 	//Start pwmoutput
 
-	P2DIR |= BIT1; // P2.1 y P2.4 como salida
-	P2SEL |= BIT1 ; // Asociado al Timer_A1
+	P2DIR |= BIT2; // P2.2 Auto-Level PWM
+	P2SEL |= BIT2 ;
+	TA1CCR0 = 40000;
+	TA1CCR1 = 0;
+	TA1CCTL1 = OUTMOD_7;
+	TA1CTL = TASSEL_2 + MC_1 + ID_3;
 
-	TA1CCR0 = 40000; // Cargamos el periodo PWM
-	TA1CCR1 = 0; // PWM duty cycle, 10% CCR1/(CCR0+1) * 100
-	TA1CCTL1 = OUTMOD_7; //Modo7 reset/set
-	TA1CTL = TASSEL_2 + MC_1+ID_3; // Timer SMCLK Modo UP
-	P1DIR |= BIT2; // P2.1 y P2.4 como salida
-	P1SEL |= BIT2 ; // Asociado al Timer_A1
-	TA0CCR0 = 40000; // Cargamos el periodo PWM
-	TA0CCR1 = 0; // PWM duty cycle, 10% CCR1/(CCR0+1) * 100
-	TA0CCTL1 = OUTMOD_7; //Modo7 reset/set
-	TA0CTL = TASSEL_2 + MC_1+ID_3; // Timer SMCLK Modo UP
 
 
 	//Initialize I2c Master code
 	i2c_init();
 	__delay_cycles(50000);__delay_cycles(50000);
 	__delay_cycles(50000);
-	//Initialize magnetometer
-	init_L3G4200D();
+
+
 	__delay_cycles(50000);
 	init_ADXL();
 	__delay_cycles(50000);
@@ -123,13 +85,8 @@ int main(void) {
 	while(1){
 		__delay_cycles(50000);
 
-		if (i2crxflag){     // Check to see if a value has been recieved via I2C Slave
-			//			__delay_cycles(50000);
-			i2crxflag=0;
-			autolevel=(RXData[1]);
-		}
-		//Read the HMC5883L.  Load value into the feedback buffer
-		read_L3G4200D(gyrovec);// Read channel 0 on multiplexer of magnetometer
+		autolevel = 1;
+
 		read_ADXL(accelvec);
 
 		// Load data to return if asked for via I2C Slave
@@ -140,23 +97,17 @@ int main(void) {
 		TXData[3]=((accelvec[1]>>8)&0xFF);
 		TXData[6]=(accelvec[2]&0xFF0);
 		TXData[5]=((accelvec[2]>>8)&0xFF);
-		TXData[7]=(gyrovec[0]&0xFF);
-		TXData[8]=((gyrovec[0]>>8)&0xFF);
-		TXData[10]=(gyrovec[1]&0xFF);
-		TXData[9]=((gyrovec[1]>>8)&0xFF);
-		TXData[12]=(gyrovec[2]&0xFF);
-		TXData[11]=((gyrovec[2]>>8)&0xFF);
 		__delay_cycles(50000);
 
 		if (autolevel){
 			//code to auto_level
-			pwmfloatx+=(1*(accelvec[1]-900))*kcontroller/kcontrollerd;
+			pwmfloatx+=(1*(accelvec[1]-900));
 			if (pwmfloatx>(PWMMAX-PWMNEU))
 				pwmfloatx=(PWMMAX-PWMNEU);
 			if (pwmfloatx<(PWMMIN-PWMNEU))
 				pwmfloatx=(PWMMIN-PWMNEU);
 			TA1CCR1=pwmfloatx+PWMNEU;
-			pwmfloaty+=(-1*(accelvec[0]-944))*kcontroller/kcontrollerd;
+			pwmfloaty+=(-1*(accelvec[0]-944));
 			if (pwmfloaty>(PWMMAX-PWMNEU))
 				pwmfloaty=(PWMMAX-PWMNEU);
 			if (pwmfloaty<(PWMMIN-PWMNEU))
@@ -227,78 +178,6 @@ __interrupt void USCIAB0RX_ISR(void)
 
 
 
-
-
-
-
-void init_L3G4200D(){
-	char i2cbuf[8];
-	i2cbuf[0]=addr_mpu;
-	i2cbuf[1]=0x20;
-	i2cbuf[2]=0xff;
-	//	i2cbuf[3]=0xff;
-	//	i2cbuf[4]=0xff;
-	//	i2cbuf[5]=0xff;
-
-	i2c_rx_bb(i2cbuf,3,0);
-	//	i2cbuf[0]=addr_mpu;
-	//	i2cbuf[1]=0x1C;
-	//	i2cbuf[2]=0x00;
-	//	i2c_rx_bb(i2cbuf,3,0);
-}
-
-
-
-void read_L3G4200D( int *gyrovec){
-	char i2cbuf[12];
-	int k;
-	i2cbuf[0]=addr_mpu;
-	i2cbuf[1]=(0x28+0x80);  // the 0x80 for auto increment
-	i2c_rx_bb(i2cbuf,2,0);
-	__delay_cycles(5000);
-	i2cbuf[0]=addr_mpu+1;
-	i2c_rx_bb(i2cbuf,1,6);
-	for (k=0;k<3;k++){
-		gyrovec[k]=(i2cbuf[k*2+2]<<8)+i2cbuf[k*2+1];
-		gyrovec[k]+=0x7fff;
-	}
-	//	for (k=0;k<3;k++){
-	//		i2cbuf[0]=addr_mpu;
-	//		i2cbuf[1]=0x3B+k*2;
-	//		i2c_rx_bb(i2cbuf,2,0);
-	//		__delay_cycles(5000);
-	//		i2cbuf[0]=addr_mpu+1;
-	//		i2c_rx_bb(i2cbuf,1,1);
-	//		__delay_cycles(5000);
-	//		accelvec[k]=(i2cbuf[1]<<8);
-	//		i2cbuf[0]=addr_mpu;
-	//		i2cbuf[1]=0x3B+k*2+1;
-	//		i2c_rx_bb(i2cbuf,2,0);
-	//		__delay_cycles(5000);
-	//		i2cbuf[0]=addr_mpu+1;
-	//		accelvec[k]+=i2cbuf[1];
-	//	}
-	//	for (k=0;k<3;k++){
-	//		i2cbuf[0]=addr_mpu;
-	//		i2cbuf[1]=0x43+k*2;
-	//		i2c_rx_bb(i2cbuf,2,0);
-	//		__delay_cycles(5000);
-	//		i2cbuf[0]=addr_mpu+1;
-	//		i2c_rx_bb(i2cbuf,1,1);
-	//		__delay_cycles(5000);
-	//		gyrovec[k]=(i2cbuf[1]<<8);
-	//		i2cbuf[0]=addr_mpu;
-	//		i2cbuf[1]=0x43+k*2+1;
-	//		i2c_rx_bb(i2cbuf,2,0);
-	//		__delay_cycles(5000);
-	//		i2cbuf[0]=addr_mpu+1;
-	//		gyrovec[k]+=i2cbuf[1];
-	//	}
-
-
-}
-
-
 int conv_char_hex(char *in_str,int num){
 	volatile int k,tempc=0;
 	for (k=0;k<num;k++){
@@ -314,45 +193,6 @@ int conv_char_hex(char *in_str,int num){
 	return tempc;
 }
 
-
-// Port 1 interrupt service routine
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=PORT2_VECTOR
-__interrupt void Port_2(void)
-#elif defined(__GNUC__)
-void __attribute__ ((interrupt(PORT1_VECTOR))) Port_2 (void)
-#else
-#error Compiler not supported!
-#endif
-{
-	volatile int k,bit_slider=1,statechange=0,n;
-	bit_slider=1;
-	//	pwm_state=P2IN;
-	for (k=0;k<8;k++){
-		//		statechange=(bit_slider&(pwm_state^P2IN));
-		if (P2IFG&bit_slider){
-
-			if (P2IN&bit_slider){
-				if (TA0R>(0xFFFF-4000)){
-					for(n=0;n<8;n++)
-						pwmread[n]-=TA0R;
-					TA0R=0;
-				}
-				pwmread[k]=TA0R;
-				P2IES |= bit_slider;
-			}
-			else{
-				pwmval[k]=TA0R-pwmread[k];
-				pwmflag|=bit_slider;
-				P2IES &=~ bit_slider;
-			}
-
-			P2IFG &= ~bit_slider;                           // P1.4 IFG cleared
-
-		}
-		bit_slider<<=1;
-	}
-}
 
 void init_ADXL(void){
 	char i2cbuf[12];
@@ -389,9 +229,9 @@ void read_ADXL(int *accel_vec){
 	accel_vec[0]=(i2cbuf[1]+((i2cbuf[2]<<8)));
 	accel_vec[1]=(i2cbuf[3]+((i2cbuf[4]<<8)));
 	accel_vec[2]=(i2cbuf[5]+((i2cbuf[6]<<8)));
-	accel_vec[0]+=1024;
-	accel_vec[1]+=1024;
-	accel_vec[2]+=1024;
+//	accel_vec[0]+=1024;
+//	accel_vec[1]+=1024;
+//	accel_vec[2]+=1024;
 	//	for (n=0;n<3;n++){
 	//		conv_hex_dec(accel_vec[n]);
 	//		for (k=0;k<6;k++)
