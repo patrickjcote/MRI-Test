@@ -1,7 +1,8 @@
 #include <msp430.h>
 #include "reels.h"
 
-
+volatile int clicks;
+volatile int reelDepth;
 
 int main(void) {
 
@@ -39,24 +40,13 @@ void initReel(){
 	TA1CCR0 = PWM_PERIOD;
 	TA1CCR2 = MOTOR_STOP;
 
-	volatile int clicks = 0;
-	volatile int reelDepth = 0;
+	clicks = 0;
+	reelDepth = 0;
 
 	__bis_SR_register(GIE);
 
 }//init_reel()
 
-int currentDepth(){
-
-	//TODO: Lookup table or conversion math for feet to clicks
-
-}//currentDepth()
-
-int goToDepth(int feet){
-
-	//TODO: Lookup table or conversion math for feet to clicks
-
-}//goToDepth()
 
 int pullUpReel(){
 
