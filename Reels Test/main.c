@@ -7,6 +7,8 @@ volatile int reelDepth;
 int main(void) {
 
 	WDTCTL = WDTPW | WDTHOLD;
+	BCSCTL1 = CALBC1_16MHZ;                    // Set DCO
+	DCOCTL = CALDCO_16MHZ;
 
 	initReel();
 
@@ -19,6 +21,8 @@ int main(void) {
 
 
 void initReel(){
+
+
 
 	//Limit Switch input
 	P1DIR &= ~BIT4;				// Limit switch input on 1.4
@@ -35,10 +39,10 @@ void initReel(){
 	//Motor PWM Output
 	P2DIR |= BIT4;				//PWM Output on P2.4
 	P2SEL |= BIT4;				//TA1.2 Output on P2.4
-	TA1CTL = TASSEL_2 + MC_1;	//Set Clock
-	TA1CCTL2 |= OUTMOD_7;		//Output mode
 	TA1CCR0 = PWM_PERIOD;
-	TA1CCR2 = MOTOR_STOP;
+	TA1CCR1 = 0;
+	TA1CCTL2 = OUTMOD_7;
+	TA1CTL = TASSEL_2 + MC_1 + ID_3;
 
 	clicks = 0;
 	reelDepth = 0;

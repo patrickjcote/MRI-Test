@@ -8,10 +8,10 @@
 #ifndef REELS_H_
 #define REELS_H_
 
-#define PWM_PERIOD 21000
-#define MOTOR_STOP 1570
-#define MOTOR_UP 1700
-#define MOTOR_DOWN 1400
+#define PWM_PERIOD 40000
+#define MOTOR_STOP 3000
+#define MOTOR_UP 2000
+#define MOTOR_DOWN 4000
 
 
 extern volatile int clicks;
