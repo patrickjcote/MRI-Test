@@ -31,9 +31,10 @@
  */
 
 #define ADXL_ADDR 0x3A		//Accelerometer Address
-#define PWMMAX	4000		// PWM high limit
-#define PWMMIN  2000		// PWM low limit
-#define PWMNEU  3000		// PWM Neutral limit
+#define PWM_MAX	3500		// PWM high limit
+#define PWM_MIN  2500		// PWM low limit
+#define PWM_NEU  3000		// PWM Neutral limit
+#define ANGLE_DIF 50
 
 unsigned char TXData[64],RXData[64];		//Buffers for the Slave of ths device
 volatile int TXData_ptr=0,RXData_ptr=0,i2crxflag=0;		//Pointers and flags for the slave device
@@ -41,6 +42,7 @@ volatile int sampstate=0,i2cmode=0;  //Sampstate can be 0-idle 1-pumping forward
 int conv_char_hex(char *,int );
 void init_ADXL(void);
 void read_ADXL(int *);
+int autoLevel(int, int *);
 
 
 int main(void) {
@@ -49,9 +51,9 @@ int main(void) {
 	int pwmcount=0,autolevel=0;
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
 	__delay_cycles(50000);__delay_cycles(50000);
-		__delay_cycles(50000);
-		__delay_cycles(50000);__delay_cycles(50000);
-			__delay_cycles(50000);
+	__delay_cycles(50000);
+	__delay_cycles(50000);__delay_cycles(50000);
+	__delay_cycles(50000);
 	BCSCTL1 = CALBC1_16MHZ;                    // Set DCO
 	DCOCTL = CALDCO_16MHZ;
 	for (k=0;k<200;k++)
@@ -85,7 +87,6 @@ int main(void) {
 	while(1){
 		__delay_cycles(50000);
 
-		autolevel = 1;
 
 		read_ADXL(accelvec);
 
@@ -99,38 +100,25 @@ int main(void) {
 		TXData[5]=((accelvec[2]>>8)&0xFF);
 		__delay_cycles(50000);
 
-		if (autolevel){
-			//code to auto_level
-			pwmfloatx+=(1*(accelvec[1]-900));
-			if (pwmfloatx>(PWMMAX-PWMNEU))
-				pwmfloatx=(PWMMAX-PWMNEU);
-			if (pwmfloatx<(PWMMIN-PWMNEU))
-				pwmfloatx=(PWMMIN-PWMNEU);
-			TA1CCR1=pwmfloatx+PWMNEU;
-			pwmfloaty+=(-1*(accelvec[0]-944));
-			if (pwmfloaty>(PWMMAX-PWMNEU))
-				pwmfloaty=(PWMMAX-PWMNEU);
-			if (pwmfloaty<(PWMMIN-PWMNEU))
-				pwmfloaty=(PWMMIN-PWMNEU);
-			TA0CCR1=pwmfloaty+PWMNEU;
-			if (autolevel==2)
-				if ((accelvec[0]<(900+10))&&(accelvec[0]>(900-10))){
-					if ((accelvec[1]<(944+10))&&(accelvec[1]>(94-10))){
-						pwmcount++;
-					}
-				}
-			if (pwmcount>10){
-				autolevel=0;
-				pwmcount=0;
-
-			}
-
-
-		}
-
+		autoLevel(1, &accelvec);
 
 	}
 }
+
+int autoLevel(int setAngle, int *accelvec){
+			if(setAngle == 0){
+				TA1CCR1 = 0;
+				return 0;
+			}
+			//code to auto_level
+			if(accelvec[0] > (ANGLE_DIF + setAngle))
+				TA1CCR1=PWM_MIN;
+			else if(accelvec[0] < (-ANGLE_DIF + setAngle))
+				TA1CCR1=PWM_MAX;
+			else
+				TA1CCR1=PWM_NEU;
+			return 1;
+}//autoLevel
 
 
 
@@ -229,9 +217,9 @@ void read_ADXL(int *accel_vec){
 	accel_vec[0]=(i2cbuf[1]+((i2cbuf[2]<<8)));
 	accel_vec[1]=(i2cbuf[3]+((i2cbuf[4]<<8)));
 	accel_vec[2]=(i2cbuf[5]+((i2cbuf[6]<<8)));
-//	accel_vec[0]+=1024;
-//	accel_vec[1]+=1024;
-//	accel_vec[2]+=1024;
+	//	accel_vec[0]+=1024;
+	//	accel_vec[1]+=1024;
+	//	accel_vec[2]+=1024;
 	//	for (n=0;n<3;n++){
 	//		conv_hex_dec(accel_vec[n]);
 	//		for (k=0;k<6;k++)
