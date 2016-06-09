@@ -4,10 +4,13 @@
 #include "float.h"
 
 volatile int clicks;
-volatile int reelDepth;
 unsigned char TXData[64],RXData[64];		//Buffers for the Slave of ths device
 volatile int TXData_ptr=0,RXData_ptr=0,i2crxflag=0;		//Pointers and flags for the slave device
 volatile int sampstate=0,i2cmode=0;  //Sampstate can be 0-idle 1-pumping forward 2-pumping reverse 3-moving sampler
+volatile int averageAngle[ANGLE_SAMPLES];
+volatile int anglePtr;
+volatile int avg_Angle;
+
 
 
 int main(void) {
@@ -42,7 +45,9 @@ int main(void) {
 
 		read_ADXL(accelvec, TXData);
 
-		autoLevel(1, &accelvec);
+		avg_Angle = avgAngle(accelvec);
+
+		autoLevel(1, accelvec);
 
 	}
 
@@ -79,7 +84,8 @@ void initReel(){
 	P2SEL |= BIT2;				//TA1.1 Output to  P2.2
 	//Init Global Variables
 	clicks = 0;
-	reelDepth = 0;
+	anglePtr = 0;
+	avg_Angle = 0;
 
 	__bis_SR_register(GIE);
 
@@ -88,7 +94,7 @@ void initReel(){
 
 int pullUpReel(){
 
-	while(reelDepth > 0){
+	while(clicks > 0){
 		TA1CCR2 = PWM_MAX;
 		//TODO: Autolevel code
 	}
@@ -98,7 +104,7 @@ int pullUpReel(){
 }//pullUpReel()
 
 int autoLevel(int angle, int *accelvec){
-	if(setAngle == 0){
+	if(angle == 0){
 		TA1CCR1 = 0;
 		return 0;
 	}
@@ -111,6 +117,19 @@ int autoLevel(int angle, int *accelvec){
 		TA1CCR1=PWM_NEU;
 	return 1;
 }//autoLevel
+
+int avgAngle(int *accelvec){
+
+	volatile int i;
+	volatile float sum;
+	anglePtr = anglePtr%(ANGLE_SAMPLES+1);
+	averageAngle[anglePtr] = accelvec[0];
+	for(i = 0; i < ANGLE_SAMPLES; i++){
+		sum += averageAngle[i];
+	}
+	anglePtr++;
+	return (sum/ANGLE_SAMPLES);
+}
 
 int conv_char_hex(char *in_str,int num){
 	volatile int k,tempc=0;

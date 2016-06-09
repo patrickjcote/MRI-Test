@@ -13,10 +13,10 @@
 #define PWM_MIN  2000		// PWM low limit
 #define PWM_NEU  3000		// PWM Neutral limit
 #define ANGLE_DIF 50		// Allowable angle diff for autolevel, 2.8=degree
+#define ANGLE_SAMPLES 10
 
 
 extern volatile int clicks;
-extern volatile int reelDepth;
 
 void initReel();
 int currentDepth();
