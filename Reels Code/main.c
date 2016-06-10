@@ -3,18 +3,12 @@
 #include "i2c.h"
 #include "float.h"
 
-volatile int currentClick;
+
 unsigned char TXData[64],RXData[64];		//Buffers for the Slave of ths device
 volatile int TXData_ptr=0,RXData_ptr=0,i2crxflag=0;		//Pointers and flags for the slave device
 volatile int sampstate=0,i2cmode=0;  //Sampstate can be 0-idle 1-pumping forward 2-pumping reverse 3-moving sampler
-volatile int averageAngle[ANGLE_SAMPLES];
-volatile int anglePtr;
-volatile int avg_Angle;
-volatile int autoLvlFlg;
-volatile int reelFlg;
-volatile int desiredClicks;
-volatile int setAngle;
-volatile int allStopFlg;
+volatile int currentClick, reelFlg, desiredClicks, allStopFlg;
+
 
 int main(void) {
 
@@ -43,8 +37,8 @@ int main(void) {
 
 	initReel();
 
-	desiredClicks = 10;
-	currentClick = 10;
+	desiredClicks = 0;
+	currentClick = 30;
 
 	while(1){
 
@@ -55,13 +49,6 @@ int main(void) {
 		else
 		{
 			read_ADXL(accelvec, TXData);
-			autoLvlFlg = autoLvlFlg % AUTOLVL_CYCLES;
-			if(!autoLvlFlg){
-				avg_Angle = avgAngle(accelvec[0]);
-				setLevel(avg_Angle, accelvec[0]);
-			}
-			autoLvlFlg++;
-			__delay_cycles(50000);
 
 			goToClick(desiredClicks);
 		}
@@ -96,13 +83,9 @@ void initReel(){
 	P2SEL |= BIT4;				//TA1.2 Output on P2.4
 	P2DIR |= BIT2;				// P2.2 Actuator PWM
 	P2SEL |= BIT2;				//TA1.1 Output to  P2.2
-	//Init Global Variables
+	//Init Globals
 	currentClick = 0;
 	reelFlg = 0;
-	anglePtr = 0;
-	avg_Angle = 0;
-	autoLvlFlg = 1;
-	setAngle = 1;
 	allStopFlg = 0;
 
 	__bis_SR_register(GIE);
@@ -114,50 +97,45 @@ int goToClick(int setClick){
 	if(currentClick != setClick){
 		if(currentClick > setClick){
 			reelFlg = 1;
+			setReelLevel(1);
 			TA1CCR2 = PWM_MAX;
 			return 1;
 		}
 		if(currentClick < setClick){
 			reelFlg = 2;
 			TA1CCR2 = PWM_MIN;
+			setReelLevel(2);
 			return 2;
 		}
 	}
 	else{
 		reelFlg = 0;
 		TA1CCR2 = PWM_NEU;
+		setReelLevel(0);
 		return 0;
 	}
 }//goToClick()
 
-int setLevel(int avgAngle, int currentAngle){
-	if(setAngle == 0){
-		TA1CCR1 = 0;
-		return 0;
+int setReelLevel(int setLevel){
+	if(setLevel == 1){
+		volatile int currentWrap;
+		currentWrap = (currentClick / TURNS_PER_WRAP)+1;
+
+		if(currentWrap % 2)
+			TA1CCR1=PWM_MIN;
+		else
+			TA1CCR1=PWM_MAX;
+		return 1;
 	}
-	if((currentAngle) > (ANGLE_DIF + avgAngle + setAngle))
-		TA1CCR1=PWM_MIN;
-	else if((currentAngle) < (-ANGLE_DIF + avgAngle + setAngle))
-		TA1CCR1=PWM_MAX;
-	else
-		TA1CCR1=PWM_NEU;
-
-	return 1;
-
-}//autoLevel
-
-int avgAngle(int accelX){
-
-	volatile int i;
-	volatile int sum = 0;
-	anglePtr = anglePtr%(ANGLE_SAMPLES+1);
-	averageAngle[anglePtr] = (accelX - setAngle);
-	for(i = 0; i < ANGLE_SAMPLES; i++){
-		sum += averageAngle[i];
+	if(setLevel == 2){
+		TA1CCR1 = PWM_MIN;
 	}
-	anglePtr++;
-	return (sum/ANGLE_SAMPLES);
-}//
+	if(setLevel == 0 || allStopFlg == 1)
+	{
+		TA1CCR1 == 0;
+	}
+
+}
 
 int conv_char_hex(char *in_str,int num){
 	volatile int k,tempc=0;
