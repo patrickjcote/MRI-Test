@@ -43,6 +43,7 @@ int main(void) {
 		}
 		if (i2crxflag){					// if data received as the I2C slave
 			__delay_cycles(50000);
+			ok2send=input_handler(i2cRXData,i2cTXData);
 			i2crxflag=0;
 
 		}
@@ -63,6 +64,13 @@ int input_handler (char *instring, char *outstring){
 			set_reel_depth=str2num(instring+2,3);
 			reel_flag=1;
 			retval=0;
+			ALL_STOP_FLAG=0;
+		}
+		if (instring[1]=='L'){				// Set values for the depth of clicks the reel will go to
+			set_reel_depth=str2num(instring+2,3);
+			reel_flag=1;
+			retval=0;
+			ALL_STOP_FLAG=0;
 		}
 		break;
 	case 'C':
@@ -76,6 +84,7 @@ int input_handler (char *instring, char *outstring){
 			set_reel_depth=-1;
 			reel_flag=1;
 			retval=0;
+			ALL_STOP_FLAG=0;
 		}
 		break;
 	case 'S':
@@ -84,7 +93,9 @@ int input_handler (char *instring, char *outstring){
 		retval=0;
 		break;
 	case 'Q':
-		outstring[0]=(0x30+1-ALL_STOP_FLAG);
+		outstring[0]=0x30;
+		outstring[1]=0x30;
+		outstring[2]=(0x30+1-ALL_STOP_FLAG);
 		retval=1;
 		break;
 	default:
@@ -110,8 +121,8 @@ int str2num(char *instring,int n){
 void num2str(int inval,char *outstring,int n){
 	int k, neg = 0, divider=1,tval=0,cval;
 	if (inval<0){
-			inval*=-1;
-			neg = 1;
+		inval*=-1;
+		neg = 1;
 	}
 	for (k=0;k<(n);k++){
 		divider*=10;
