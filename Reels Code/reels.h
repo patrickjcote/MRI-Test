@@ -15,7 +15,7 @@
 
 
 void initReel();
-int goToClick(int setClick)
+int goToClick(int);
 int setReelLevel();
 int conv_char_hex(char *,int );
 
