@@ -16,8 +16,6 @@ volatile int desiredClicks;
 volatile int setAngle;
 volatile int allStopFlg;
 
-
-
 int main(void) {
 
 	int accelvec[3],k;
@@ -67,11 +65,7 @@ int main(void) {
 
 			goToClick(desiredClicks);
 		}
-
-
 	}
-
-
 	return 0;
 }//main()
 
@@ -100,14 +94,14 @@ void initReel(){
 	//PWM Outputs
 	P2DIR |= BIT4;				//Motor Control on P2.4
 	P2SEL |= BIT4;				//TA1.2 Output on P2.4
-	P2DIR |= BIT2;				// P2.2 Auto-Level PWM
+	P2DIR |= BIT2;				// P2.2 Actuator PWM
 	P2SEL |= BIT2;				//TA1.1 Output to  P2.2
 	//Init Global Variables
 	currentClick = 0;
 	reelFlg = 0;
 	anglePtr = 0;
 	avg_Angle = 0;
-	autoLvlFlg = 0;
+	autoLvlFlg = 1;
 	setAngle = 1;
 	allStopFlg = 0;
 
@@ -163,7 +157,7 @@ int avgAngle(int accelX){
 	}
 	anglePtr++;
 	return (sum/ANGLE_SAMPLES);
-}
+}//
 
 int conv_char_hex(char *in_str,int num){
 	volatile int k,tempc=0;
@@ -299,4 +293,3 @@ __interrupt void USCIAB0RX_ISR(void)
 	}
 
 }
-

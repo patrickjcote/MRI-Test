@@ -15,6 +15,7 @@
 #define ANGLE_DIF 10		// Allowable angle diff for autolevel, 2.8=degree
 #define ANGLE_SAMPLES 10
 #define AUTOLVL_CYCLES 100	//
+#define TURN_PER_WRAP 46
 
 
 extern volatile int currentClick;
