@@ -8,7 +8,7 @@ int str2num(char *,int );
 int input_handler (char *, char *);
 void num2str(int ,char *,int );
 
-int set_reel_depth=0, cur_reel_depth=0,reel_flag=0,ALL_STOP_FLAG=1;
+int set_reel_depth=0, cur_reel_depth=-45,reel_flag=0,ALL_STOP_FLAG=1;
 
 
 int main(void) {
@@ -36,8 +36,7 @@ int main(void) {
 			else{
 				ok2send=input_handler(rx_data_str,tx_data_str);
 				if (ok2send)
-					uart_write_string(0,ok2send)
-
+					uart_write_string(0,ok2send);
 
 			}
 			rx_flag=0;
@@ -88,7 +87,14 @@ int input_handler (char *instring, char *outstring){
 		outstring[0]=(0x30+1-ALL_STOP_FLAG);
 		retval=1;
 		break;
+	default:
+		outstring[0]='N';
+		outstring[1]='o';
+		retval=2;
+		break;
 	}
+
+	return retval;
 
 }
 
@@ -102,7 +108,11 @@ int str2num(char *instring,int n){
 }
 
 void num2str(int inval,char *outstring,int n){
-	int k, divider=1,tval=0,cval;
+	int k, neg = 0, divider=1,tval=0,cval;
+	if (inval<0){
+			inval*=-1;
+			neg = 1;
+	}
 	for (k=0;k<(n);k++){
 		divider*=10;
 	}
@@ -113,7 +123,7 @@ void num2str(int inval,char *outstring,int n){
 		outstring[k]=cval+0x30;
 		tval-=(cval*divider);
 	}
-	if (inval<0)
+	if (neg)
 		outstring[0]='-';
 
 }
