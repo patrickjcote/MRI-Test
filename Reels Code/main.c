@@ -13,6 +13,8 @@ volatile int avg_Angle;
 volatile int autoLvlFlg;
 volatile int reelFlg;
 volatile int desiredClicks;
+volatile int setAngle;
+volatile int allStopFlg;
 
 
 
@@ -44,22 +46,27 @@ int main(void) {
 	initReel();
 
 	desiredClicks = 10;
-	currentClick = 30;
+	currentClick = 10;
 
 	while(1){
 
-		//Leveling
-		read_ADXL(accelvec, TXData);
-		autoLvlFlg = autoLvlFlg % AUTOLVL_CYCLES;
-		if(!autoLvlFlg){
-			avg_Angle = avgAngle(accelvec[0]);
-			setLevel(1, avg_Angle, accelvec[0]);
+		if(allStopFlg){
+			TA1CCR0 = 0;
+			TA1CCR1 = 0;
 		}
-		autoLvlFlg++;
-		__delay_cycles(50000);
+		else
+		{
+			read_ADXL(accelvec, TXData);
+			autoLvlFlg = autoLvlFlg % AUTOLVL_CYCLES;
+			if(!autoLvlFlg){
+				avg_Angle = avgAngle(accelvec[0]);
+				setLevel(avg_Angle, accelvec[0]);
+			}
+			autoLvlFlg++;
+			__delay_cycles(50000);
 
-		goToClick(desiredClicks);
-
+			goToClick(desiredClicks);
+		}
 
 
 	}
@@ -101,6 +108,8 @@ void initReel(){
 	anglePtr = 0;
 	avg_Angle = 0;
 	autoLvlFlg = 0;
+	setAngle = 1;
+	allStopFlg = 0;
 
 	__bis_SR_register(GIE);
 
@@ -109,25 +118,25 @@ void initReel(){
 int goToClick(int setClick){
 
 	if(currentClick != setClick){
-				if(currentClick > setClick){
-					reelFlg = 1;
-					TA1CCR2 = PWM_MAX;
-					return 1;
-				}
-				if(currentClick < setClick){
-					reelFlg = 2;
-					TA1CCR2 = PWM_MIN;
-					return 2;
-				}
-			}
-			else{
-				reelFlg = 0;
-				TA1CCR2 = PWM_NEU;
-				return 0;
-			}
+		if(currentClick > setClick){
+			reelFlg = 1;
+			TA1CCR2 = PWM_MAX;
+			return 1;
+		}
+		if(currentClick < setClick){
+			reelFlg = 2;
+			TA1CCR2 = PWM_MIN;
+			return 2;
+		}
+	}
+	else{
+		reelFlg = 0;
+		TA1CCR2 = PWM_NEU;
+		return 0;
+	}
 }//goToClick()
 
-int setLevel(int setAngle, int avgAngle, int currentAngle){
+int setLevel(int avgAngle, int currentAngle){
 	if(setAngle == 0){
 		TA1CCR1 = 0;
 		return 0;
@@ -148,7 +157,7 @@ int avgAngle(int accelX){
 	volatile int i;
 	volatile int sum = 0;
 	anglePtr = anglePtr%(ANGLE_SAMPLES+1);
-	averageAngle[anglePtr] = accelX;
+	averageAngle[anglePtr] = (accelX - setAngle);
 	for(i = 0; i < ANGLE_SAMPLES; i++){
 		sum += averageAngle[i];
 	}
@@ -233,6 +242,7 @@ __interrupt void Port_1(void)
 {
 	//Hardware interrupt for limit switch
 	currentClick = 0;
+	allStopFlg = 1;
 	P1IFG &= ~BIT4;
 }
 

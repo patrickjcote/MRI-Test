@@ -26,6 +26,6 @@ int pullUpReel();
 int conv_char_hex(char *,int );
 void init_ADXL(void);
 void read_ADXL(int *, int *);
-int setLevel(int, int, int);
+int setLevel(int, int);
 
 #endif
