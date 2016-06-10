@@ -1,1 +1,0 @@
-"./spi_bb.obj" "./serial_handler.obj" "./main.obj" "./i2c.obj" -l"libc.a" "../lnk_msp430g2553.cmd" 
