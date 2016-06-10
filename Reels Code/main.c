@@ -1,19 +1,12 @@
 #include <msp430.h>
 #include "reels.h"
-#include "i2c.h"
-#include "float.h"
 
-
-unsigned char TXData[64],RXData[64];		//Buffers for the Slave of ths device
-volatile int TXData_ptr=0,RXData_ptr=0,i2crxflag=0;		//Pointers and flags for the slave device
-volatile int sampstate=0,i2cmode=0;  //Sampstate can be 0-idle 1-pumping forward 2-pumping reverse 3-moving sampler
-volatile int currentClick, reelFlg, desiredClicks, allStopFlg;
+volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG=1, reel_flag=0, set_reel_level;
 
 
 int main(void) {
 
-	int accelvec[3],k;
-
+	volatile int n, k;
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
 	__delay_cycles(50000);__delay_cycles(50000);
 	__delay_cycles(50000);
@@ -24,34 +17,18 @@ int main(void) {
 	for (k=0;k<200;k++)
 		__delay_cycles(50000);
 
-	//Initialize I2c Master code
-	i2c_init();
-	__delay_cycles(50000);__delay_cycles(50000);
-	__delay_cycles(50000);__delay_cycles(50000);
-
-	init_ADXL();
-	__delay_cycles(50000);
-
 	__bis_SR_register(GIE);  // Enable interrupts (yes this is needed)
 	__delay_cycles(50000);
 
 	initReel();
 
-	desiredClicks = 0;
-	currentClick = 30;
-
 	while(1){
-
-		if(allStopFlg){
-			TA1CCR0 = 0;
-			TA1CCR1 = 0;
-		}
-		else
+		if(reel_flag)
 		{
-			read_ADXL(accelvec, TXData);
+			goToClick(set_reel_depth);
 
-			goToClick(desiredClicks);
 		}
+
 	}
 	return 0;
 }//main()
@@ -84,9 +61,10 @@ void initReel(){
 	P2DIR |= BIT2;				// P2.2 Actuator PWM
 	P2SEL |= BIT2;				//TA1.1 Output to  P2.2
 	//Init Globals
-	currentClick = 0;
-	reelFlg = 0;
-	allStopFlg = 0;
+	cur_reel_depth = 0;
+	set_reel_depth = 0;
+	reel_dir = 0;
+	ALL_STOP_FLAG = 0;
 
 	__bis_SR_register(GIE);
 
@@ -94,32 +72,35 @@ void initReel(){
 
 int goToClick(int setClick){
 
-	if(currentClick != setClick){
-		if(currentClick > setClick){
-			reelFlg = 1;
-			setReelLevel(1);
-			TA1CCR2 = PWM_MAX;
+	if(cur_reel_depth != setClick){
+		if(cur_reel_depth > setClick){
+			reel_dir = 1;
+			set_reel_level = 3;
+			TA1CCR2 = PWM_MIN;
+			setReelLevel();
 			return 1;
 		}
-		if(currentClick < setClick){
-			reelFlg = 2;
-			TA1CCR2 = PWM_MIN;
-			setReelLevel(2);
+		if(cur_reel_depth < setClick){
+			reel_dir = 2;
+			TA1CCR2 = PWM_MAX;
+			set_reel_level = 2;
+			setReelLevel();
 			return 2;
 		}
 	}
 	else{
-		reelFlg = 0;
+		reel_dir = 0;
 		TA1CCR2 = PWM_NEU;
-		setReelLevel(0);
+		set_reel_level = 0;
+		setReelLevel();
 		return 0;
 	}
 }//goToClick()
 
-int setReelLevel(int setLevel){
-	if(setLevel == 1){
+int setReelLevel(){
+	if(set_reel_level == 3){
 		volatile int currentWrap;
-		currentWrap = (currentClick / TURNS_PER_WRAP)+1;
+		currentWrap = (cur_reel_depth / TURNS_PER_WRAP)+1;
 
 		if(currentWrap % 2)
 			TA1CCR1=PWM_MIN;
@@ -127,10 +108,13 @@ int setReelLevel(int setLevel){
 			TA1CCR1=PWM_MAX;
 		return 1;
 	}
-	if(setLevel == 2){
+	if(set_reel_level == 2){
 		TA1CCR1 = PWM_MIN;
 	}
-	if(setLevel == 0 || allStopFlg == 1)
+	if(set_reel_level == 1){
+		TA1CCR1 = PWM_MAX;
+	}
+	if(set_reel_level == 0 || ALL_STOP_FLAG == 1)
 	{
 		TA1CCR1 == 0;
 	}
@@ -152,60 +136,7 @@ int conv_char_hex(char *in_str,int num){
 	return tempc;
 }
 
-void init_ADXL(void){
-	char i2cbuf[12];
-	i2cbuf[0]=ADXL_ADDR;
-	i2cbuf[1]=0x2D;		//Power control address
-	i2cbuf[2]=0x08;		//Turn on the power control
-	i2c_rx_bb(i2cbuf,3,0);		//Transmit the power on sequence
-	i2cbuf[0]=ADXL_ADDR;
-	i2cbuf[1]=0x2C;
-	//	i2cbuf[2]=0x00;
-	//	i2c_rx_bb(i2cbuf,3,0);
-	////
-	//	i2cbuf[1]=0x31;		//Resolution address Data Format
-	//	i2cbuf[2]=0x88;		//Full range resolution set
-	//	i2c_rx_bb(i2cbuf,3,0);		//Transmit the resolution data
-	//	i2cbuf[1]=0x30;
-	//	i2cbuf[2]=-10;
-	//	i2cbuf[3]=-10;
-	//	i2cbuf[4]=20;
-	//	i2c_rx_bb(i2cbuf,5,0);		//Transmit the resolution data
-}
 
-void read_ADXL(int *accel_vec, int *TXData){
-	char i2cbuf[12];
-	int n,k;
-	i2cbuf[0]=ADXL_ADDR;
-	i2cbuf[1]=0x32+0x80;
-	i2c_rx_bb(i2cbuf,2,0);
-
-
-	i2cbuf[0]=(ADXL_ADDR+1);
-
-	i2c_rx_bb(i2cbuf,1,6);
-	accel_vec[0]=(i2cbuf[1]+((i2cbuf[2]<<8)));
-	accel_vec[1]=(i2cbuf[3]+((i2cbuf[4]<<8)));
-	accel_vec[2]=(i2cbuf[5]+((i2cbuf[6]<<8)));
-	//	accel_vec[0]+=1024;
-	//	accel_vec[1]+=1024;
-	//	accel_vec[2]+=1024;
-	//	for (n=0;n<3;n++){
-	//		conv_hex_dec(accel_vec[n]);
-	//		for (k=0;k<6;k++)
-	//			tx_data_str[k]=dec_str[k];
-	//		uart_write_string(0,6);
-	//	}
-	// Load data to return if asked for via I2C Slave
-	TXData[0]=13;
-	TXData[2]=(accel_vec[0]&0xFF0);
-	TXData[1]=((accel_vec[0]>>8)&0xFF);
-	TXData[4]=(accel_vec[1]&0xFF0);
-	TXData[3]=((accel_vec[1]>>8)&0xFF);
-	TXData[6]=(accel_vec[2]&0xFF0);
-	TXData[5]=((accel_vec[2]>>8)&0xFF);
-	__delay_cycles(50000);
-}
 
 // --------------------------------  Interrupts ----------------------
 // Port 1 ISR
@@ -213,8 +144,8 @@ void read_ADXL(int *accel_vec, int *TXData){
 __interrupt void Port_1(void)
 {
 	//Hardware interrupt for limit switch
-	currentClick = 0;
-	allStopFlg = 1;
+	cur_reel_depth = 0;
+	ALL_STOP_FLAG = 1;
 	P1IFG &= ~BIT4;
 }
 
@@ -223,51 +154,10 @@ __interrupt void Port_1(void)
 __interrupt void Port_2(void)
 {
 	//Hardware interrupt for click counter
-	if(reelFlg == 2)
-		currentClick++;
-	if(reelFlg == 1)
-		currentClick--;
+	if(reel_dir == 2)
+		cur_reel_depth++;
+	if(reel_dir == 1)
+		cur_reel_depth--;
 
 	P2IFG &= ~BIT0;
-}
-
-// USCI_B0 Data ISR
-#pragma vector = USCIAB0TX_VECTOR
-__interrupt void USCIAB0TX_ISR(void)
-{
-	if (i2cmode){
-		UCB0TXBUF = TXData[TXData_ptr];                       // TX data
-		TXData_ptr++;
-	}
-	else{
-		RXData[RXData_ptr]=UCB0RXBUF;
-		RXData_ptr++;
-		i2crxflag++;
-	}
-
-	//  __bic_SR_register_on_exit(CPUOFF);        // Exit LPM0
-}
-
-// USCI_B0 State ISR
-#pragma vector = USCIAB0RX_VECTOR
-__interrupt void USCIAB0RX_ISR(void)
-{
-	//	volatile int temp;
-	i2cmode=0;
-
-	if(IFG2 & UCB0TXIFG){							// detect beginning of i2c in slave-master mode
-		i2cmode=1;
-		if (UCB0STAT&UCSTTIFG){
-			UCB0STAT &= ~(UCSTPIFG + UCSTTIFG);       // Clear interrupt flags
-			TXData_ptr=0;
-		}	// Increme
-	}
-	if(IFG2&UCB0RXIFG){								// detect beginning of i2c in master-slave mode
-		i2cmode=0;
-		if (UCB0STAT&UCSTTIFG){
-			UCB0STAT &= ~(UCSTPIFG + UCSTTIFG);       // Clear interrupt flags
-			RXData_ptr=0;
-		}	// Increment data
-	}
-
 }
