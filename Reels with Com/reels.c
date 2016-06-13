@@ -34,8 +34,8 @@ void initReel(){
 	set_reel_depth = 0;
 	reel_dir = 0;
 	reel_flag = 0;
-	set_reel_level = 0;
 	ALL_STOP_FLAG = 1;
+	status_code = 0;
 
 	__bis_SR_register(GIE);
 
@@ -51,36 +51,33 @@ int goToClick(int setClick){
 	}
 	if(timeout_count2 > REEL_TIMEOUT_2){
 		ALL_STOP_FLAG = 1;
-		return -1;
+		return 4;
 	}
 
 	if(cur_reel_depth != setClick){
 		if(cur_reel_depth > setClick){
 			reel_dir = 1;
-			set_reel_level = 3;
 			TA1CCR2 = PWM_MIN;
-			setReelLevel();
-			return 1;
+			setReelLevel(3);
+			return reel_dir;
 		}
 		if(cur_reel_depth < setClick){
 			reel_dir = 2;
 			TA1CCR2 = PWM_MAX;
-			set_reel_level = 2;
-			setReelLevel();
-			return 2;
+			setReelLevel(2);
+			return reel_dir;
 		}
 	}
 	else{
 		reel_dir = 0;
 		reel_flag = 0;
 		TA1CCR2 = PWM_NEU;
-		set_reel_level = 0;
-		setReelLevel();
+		setReelLevel(0);
 		return 0;
 	}
 }//goToClick()
 
-int setReelLevel(){
+int setReelLevel(int set_reel_level){
 	if(set_reel_level == 3){
 		volatile int currentWrap;
 		currentWrap = (cur_reel_depth / TURNS_PER_WRAP)+1;
@@ -129,6 +126,7 @@ __interrupt void Port_1(void)
 	//Hardware interrupt for limit switch
 	cur_reel_depth = 0;
 	ALL_STOP_FLAG = 1;
+	status_code = 3;
 	P1IFG &= ~BIT4;
 }
 

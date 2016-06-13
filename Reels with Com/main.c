@@ -11,6 +11,7 @@ int input_handler (char *, char *);
 void num2str(int ,char *,int );
 
 volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG, reel_flag, set_reel_level;
+volatile int status_code;
 volatile unsigned int timeout_count1, timeout_count2;
 
 int main(void) {
@@ -60,7 +61,7 @@ int main(void) {
 		}
 		if (!ALL_STOP_FLAG){
 			if(reel_flag){
-				goToClick(set_reel_depth);
+				status_code = goToClick(set_reel_depth);
 			}
 		}
 		if (ALL_STOP_FLAG){
@@ -88,13 +89,6 @@ int input_handler (char *instring, char *outstring){
 			ALL_STOP_FLAG=0;
 		}
 		break;
-		if (instring[1]=='L'){				// Set values for the level of the reel
-			set_reel_depth=str2num(instring+2,3);
-			reel_flag=1;
-			retval=0;
-			ALL_STOP_FLAG=0;
-		}
-		break;
 	case 'C':
 		if (instring[1]=='D'){				// Set values for the depth of clicks the reel will go to
 			num2str(cur_reel_depth,outstring,3);
@@ -115,15 +109,20 @@ int input_handler (char *instring, char *outstring){
 		retval=0;
 		break;
 	case 'Q':
-		outstring[0]=0x30;
+		outstring[0]=(0x30);
 		outstring[1]=0x30;
-		outstring[2]=(0x30+1-ALL_STOP_FLAG);
+		outstring[2]=(0x30+status_code);
 		retval=1;
 		break;
 	default:
-		outstring[0]='N';
-		outstring[1]='o';
-		retval=2;
+		outstring[0]='I';
+		outstring[1]='n';
+		outstring[2]='v';
+		outstring[3]='a';
+		outstring[4]='l';
+		outstring[5]='i';
+		outstring[6]='d';
+		retval=7;
 		break;
 	}
 
@@ -167,6 +166,8 @@ void all_stop_fun(void){
 	TA0CCR2 = 0;
 	TA1CCR1 = 0;
 	TA1CCR2 = 0;
+
+	status_code = 5;
 }
 
 

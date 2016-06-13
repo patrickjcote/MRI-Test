@@ -16,12 +16,13 @@
 #define REEL_TIMEOUT_2 5
 
 
-extern volatile int cur_reel_depth, reel_dir, set_reel_depth, set_reel_level, ALL_STOP_FLAG, reel_flag;
+extern volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG, reel_flag;
 extern volatile unsigned int timeout_count1, timeout_count2;
+extern volatile int status_code;
 
 void initReel();
 int goToClick(int);
-int setReelLevel();
+int setReelLevel(int);
 int conv_char_hex(char *,int );
 
 #endif
