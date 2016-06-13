@@ -42,8 +42,8 @@ int main(void) {
 	volatile int taddress, temp,k,n,loopval;
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
 
-	uart_init(8);								// Initialize uart at 115200 baud
-
+	uart_init(4);								// Initialize uart at 115200 baud
+	UCA0TXBUF='x';
 	i2c_init();									// initialize I2C Master on pins 1.7 and 1.6
 	__bis_SR_register(GIE);						// Enable global interrupts (for UART)
 	while(1){
@@ -59,40 +59,21 @@ int main(void) {
 				i2cbuf[0]=conv_char_hex(rx_data_str+1,2);		//Convert address data to first byte
 				i2cbuf[0]<<=1;
 				i2cbuf[0]++;									// Make it a "read" address
-				k=i2c_rx_bb(i2cbuf,1,-1);							// read I2C bus with indefinite number of return bytes (-1)
+				k=i2c_rx_bb(i2cbuf,1,3);							// read I2C bus with indefinite number of return bytes (-1)
 				if (k==0){
-					loopval=(i2cbuf[1]-1)/2;
-					i2cbuf[1]=0;
-					tx_data_str[0]=loopval+0x30;
-					uart_write_string(0,1);
-					for (n=0;n<loopval;n++){						// Convert returned data into set of strings
-						temp=i2cbuf[n*2+2];
-						i2cbuf[n*2+2]=0;
-						temp<<=8;
-						temp&=~0xFF;
-						temp|=(i2cbuf[n*2+3]&0xFF);
-						i2cbuf[n*2+3]=0;
-						unsigned_conv_hex_dec(temp);
-						temp=0;
-						for (k=0;k<6;k++)
-							tx_data_str[k]=dec_str[k];
-						uart_write_string(0,6);						// Send each string
+					for(n=0;n<3;n++){
+						tx_data_str[n]=i2cbuf[n+1];
 					}
+					uart_write_string(0,3);						// Send each string
 				}
 			}
 			else if (rx_data_str[0]=='*'){						// Send desired values to I2C Slave
-				if (rx_flag>=9){
 					i2cbuf[0]=conv_char_hex(rx_data_str+1,2);
 					i2cbuf[0]<<=1;
-					TXVAL=0;
-					for (k=0;k<5;k++){							// Convert string of characters into a single 2 byte word
-						TXVAL*=10;
-						TXVAL+=(rx_data_str[k+3]-0x30);
+					for (n=3;n<8;n++){
+						i2cbuf[n-2]=rx_data_str[n];
 					}
-					i2cbuf[2]=(TXVAL&0xff);						// Split word into two bytes
-					i2cbuf[1]=((TXVAL>>8)&0xff);
-					i2c_rx_bb(i2cbuf,rx_flag-3,0);				// Transmit bytes via I2C bus
-				}
+					i2c_rx_bb(i2cbuf,6,0);				// Transmit bytes via I2C bus
 			}
 			else if (rx_data_str[0]=='B'){						//Broadcast to all available slaves
 				for (k=0;k<0x80;k++){
