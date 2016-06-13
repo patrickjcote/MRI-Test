@@ -44,7 +44,6 @@ void initReel(){
 int goToClick(int setClick){
 
 	timeout_count1++;
-
 	if(timeout_count1 > REEL_TIMEOUT_1){
 		timeout_count1 = 0;
 		timeout_count2++;
@@ -73,6 +72,7 @@ int goToClick(int setClick){
 		reel_flag = 0;
 		TA1CCR2 = PWM_NEU;
 		setReelLevel(0);
+		ALL_STOP_FLAG = 1;
 		return 0;
 	}
 }//goToClick()
@@ -88,11 +88,8 @@ int setReelLevel(int set_reel_level){
 			TA1CCR1=PWM_MAX;
 		return 1;
 	}
-	if(set_reel_level == 2){
+	if(set_reel_level == 2){ //Reeling down
 		TA1CCR1 = PWM_MIN;
-	}
-	if(set_reel_level == 1){
-		TA1CCR1 = PWM_MAX;
 	}
 	if(set_reel_level == 0 || ALL_STOP_FLAG == 1)
 	{
@@ -100,22 +97,6 @@ int setReelLevel(int set_reel_level){
 	}
 
 }
-
-int conv_char_hex(char *in_str,int num){
-	volatile int k,tempc=0;
-	for (k=0;k<num;k++){
-		tempc<<=4;
-		if (in_str[k]>0x60)
-			tempc+=in_str[k]-87;
-		else if (in_str[k]>0x40)
-			tempc+=in_str[k]-55;
-		else
-			tempc+=in_str[k]-0x30;
-
-	}
-	return tempc;
-}
-
 
 
 // --------------------------------  Interrupts ----------------------
@@ -126,7 +107,7 @@ __interrupt void Port_1(void)
 	//Hardware interrupt for limit switch
 	cur_reel_depth = 0;
 	ALL_STOP_FLAG = 1;
-	status_code = 3;
+	status_code = 3;  //Limit switch hit
 	P1IFG &= ~BIT4;
 }
 
@@ -139,6 +120,10 @@ __interrupt void Port_2(void)
 		cur_reel_depth++;
 	if(reel_dir == 1)
 		cur_reel_depth--;
+	if(cur_reel_depth < MIN_CLICKS || cur_reel_depth > MAX_CLICKS){
+		ALL_STOP_FLAG = 1;
+		status_code = 6; //Clicks out of bounds
+	}
 
 	timeout_count1 = 0;
 	timeout_count2 = 0;

@@ -10,7 +10,7 @@ int str2num(char *,int );
 int input_handler (char *, char *);
 void num2str(int ,char *,int );
 
-volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG, reel_flag, set_reel_level;
+volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG, reel_flag;
 volatile int status_code;
 volatile unsigned int timeout_count1, timeout_count2;
 
@@ -109,19 +109,15 @@ int input_handler (char *instring, char *outstring){
 		retval=0;
 		break;
 	case 'Q':
-		outstring[0]=(0x30);
-		outstring[1]=0x30;
+		outstring[0]=(0x30+ALL_STOP_FLAG);
+		outstring[1]=(0x30+reel_flag);
 		outstring[2]=(0x30+status_code);
 		retval=1;
 		break;
 	default:
-		outstring[0]='I';
-		outstring[1]='n';
-		outstring[2]='v';
-		outstring[3]='a';
-		outstring[4]='l';
-		outstring[5]='i';
-		outstring[6]='d';
+		outstring[0]='B';
+		outstring[1]='a';
+		outstring[2]='d';
 		retval=7;
 		break;
 	}
