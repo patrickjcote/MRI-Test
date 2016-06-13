@@ -1,23 +1,33 @@
 #include <msp430.h>
 #include "serial_handler.h"
+#include "reels.h"
+
 /*
- * main.c
+ * main.c for Reels Board
  */
 
 int str2num(char *,int );
 int input_handler (char *, char *);
 void num2str(int ,char *,int );
 
-int set_reel_depth=0, cur_reel_depth=-45,reel_flag=0,ALL_STOP_FLAG=1;
-
+volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG, reel_flag, set_reel_level;
 
 int main(void) {
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
-	volatile char identify[]="Identify_your_device";
-	volatile int n, ok2send=0;
+	volatile char identify[]="Reels";
+	volatile int n, k, ok2send=0;
 	__delay_cycles(50000);
 	i2c_slave_init(0x48);  //Set slave address to 0x48
 	uart_init(4);   // set uart baud rate to 9600
+
+	BCSCTL1 = CALBC1_16MHZ;                    // Set Clock Speed
+	DCOCTL = CALDCO_16MHZ;
+	for (k=0;k<200;k++)
+		__delay_cycles(50000);
+
+
+
+	initReel();
 
 
 	__bis_SR_register(GIE);
@@ -48,7 +58,15 @@ int main(void) {
 
 		}
 		if (!ALL_STOP_FLAG){
-			//check flags of all devices
+			if(reel_flag){
+				goToClick(set_reel_depth);
+			}
+		}
+		if (ALL_STOP_FLAG){
+			TA0CCR1 = 0;
+			TA0CCR2 = 0;
+			TA1CCR1 = 0;
+			TA1CCR2 = 0;
 		}
 
 
@@ -66,6 +84,7 @@ int input_handler (char *instring, char *outstring){
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
+		break;
 		if (instring[1]=='L'){				// Set values for the depth of clicks the reel will go to
 			set_reel_depth=str2num(instring+2,3);
 			reel_flag=1;

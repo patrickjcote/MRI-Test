@@ -4,17 +4,15 @@
  *  Created on: Jul 28, 2014
  *      Author: BHill
  */
-#include "msp430.h"
-#define tide 200
-#define SDA BIT0
-#define SCL BIT3
+#include "msp430x22x4.h"
+#define tide 35
 //volatile char i2cbuf[16];
 
 void i2c_init(void){
 	BCSCTL1 = CALBC1_16MHZ;                    // Set DCO
 	DCOCTL = CALDCO_16MHZ;
-	P1DIR |= (SDA+SCL);
-	P1OUT |= (SDA+SCL);
+	P2DIR |= 0x18;
+	P2OUT |= 0x18;
 }
 
 
@@ -29,81 +27,82 @@ void wait_burn(int cycles){
 int i2c_rx_bb(char *i2cbuf,int txnum, int rxnum){
 	volatile unsigned int i,k, temp;
 	//		wait_burn(100);
-	P1OUT|=SCL;				//CLK High
-	P1DIR |=SDA;				//Data Output
+	P2OUT|=0x010;				//CLK High
+	P2DIR |=0x08;				//Data Output
 
-	P1OUT &=~SDA;				//Data low
+	P2OUT &=~0x08;				//Data low
 	__delay_cycles(tide);
-	P1OUT&=~SCL;				//Clk low
+	P2OUT&=~0x10;				//Clk low
 	__delay_cycles(2);
 	for (i=0;i<txnum;i++){
 		temp=i2cbuf[i];
 		for (k=0;k<8;k++){
 			__delay_cycles(tide);
 			if ((temp&0x80)==0x80){
-				P1OUT |=SDA;
+				P2OUT |=0x08;
 			}
 			else{
-				P1OUT&=~SDA;
+				P2OUT&=~0x08;
 			}
-			P1OUT|=SCL;		//CLK High
+			P2OUT|=0x10;		//CLK High
 			__delay_cycles(tide);
 			temp<<=1;
-			P1OUT&=~SCL;		//CLK Low
+			P2OUT&=~0x10;		//CLK Low
 
 		}
-		P1DIR &=~SDA;				//Set input on data for ACK
+		P2DIR &=~0x08;				//Set input on data for ACK
+
 		__delay_cycles(tide);
-		P1OUT|=SCL;				//CLK high
+		P2OUT|=0X10;				//CLK high
 		__delay_cycles(tide);
-		if (P1IN&SDA){				//  Acknowledge missed, stop condition ensues
-			P1DIR|=SDA;			// Set data as output
-			P1OUT&=~SDA;			// Data low
-			P1OUT&=~SCL;			//CLK Low
+		if (P2IN&0x08){				//  Acknowledge missed, stop condition ensues
+			P2DIR|=0x08;			// Set data as output
+			P2OUT&=~0x08;			// Data low
+			P2OUT&=~0x10;			//CLK Low
 			__delay_cycles(tide);
-			P1OUT|=SCL;			//CLK High
+			P2OUT|=0x10;			//CLK High
 			__delay_cycles(tide);			//Stop Condition
-			P1OUT |=SDA;			//Data High
+			P2OUT |=0x08;			//Data High
 			return 1;
 		}
-		P1OUT &=~SCL;				//CLK Low
-		P1DIR|=SDA;				//Set direction to output for data
+		P2OUT &=~0X10;				//CLK Low
+		P2DIR|=0x08;				//Set direction to output for data
 		__delay_cycles(tide);
-		P1OUT&=~SDA;
+		P2OUT&=~0x08;
 	}
 
-	P1DIR&=~SDA;
-	P1OUT&=~SDA;
+	P2DIR&=~0x08;
+	P2OUT&=~0x08;
 	if (rxnum==-1)
 		rxnum=100;
 
 	for (i=(txnum); i<(txnum+rxnum); i++){
 		temp=0x00;
-		P1DIR&=~SDA;
+		P2DIR&=~0x08;
 		for (k=0; k<8; k++){
 			temp<<=1;
 			__delay_cycles(tide);
 
-			P1OUT|=SCL;		//CLK High
+			P2OUT|=0x10;		//CLK High
 			__delay_cycles(tide);
-			if ((P1IN&SDA)==SDA){
+			if ((P2IN&0x08)==0x08){
 				temp|=0x01;
 			}
 			else{
 				temp&=~0x01;
 			}
 			//				__delay_cycles(7);
-			P1OUT&=~SCL;		//CLK Low
+			P2OUT&=~0x10;		//CLK Low
 
-			P1OUT |=SDA;
+			P2OUT |=0x08;
 		}
 
-		P1DIR |=SDA;				//Set output for Master ACK
+		P2DIR |=0x08;				//Set output for Master ACK
 		if (i==(txnum+rxnum-1)){		// make NACK
-			P1OUT |=SDA;				//Data High for NACK
+			P2OUT |=0x08;				//Data High for NACK
 		}
 		else{					//Master send ACK
-			P1OUT &=~SDA;				//Data Low
+			P2OUT &=~0x08;				//Data Low
 			__delay_cycles(tide);
 
 		}
@@ -116,26 +115,26 @@ int i2c_rx_bb(char *i2cbuf,int txnum, int rxnum){
 
 
 		__delay_cycles(tide);
-		P1OUT|=SCL;				//CLK high
+		P2OUT|=0X10;				//CLK high
 		__delay_cycles(tide*3);
 
 
 
-		P1OUT &=~SCL;				//CLK Low
+		P2OUT &=~0X10;				//CLK Low
 
 		__delay_cycles(tide);
-		P1OUT &=~SDA;				//Data Low
-		P1DIR&=~SDA;
+		P2OUT &=~0x08;				//Data Low
+		P2DIR&=~0x08;
 
 
 
 	}
-	P1DIR |=SDA;				//Set output
-	P1OUT &=~SDA;				//Data low
+	P2DIR |=0x08;				//Set output
+	P2OUT &=~0x08;				//Data low
 	__delay_cycles(tide);
-	P1OUT|=SCL;				//CLK high
+	P2OUT|=0X10;				//CLK high
 	__delay_cycles(tide);
-	P1OUT|=SDA;				// Data high: Stop bit
+	P2OUT|=0x08;				// Data high: Stop bit
 	return 0;
 
 

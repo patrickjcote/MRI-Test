@@ -13,6 +13,7 @@
 #define PWM_NEU  3000		// PWM Neutral limit
 #define TURNS_PER_WRAP 5
 
+extern volatile int cur_reel_depth, reel_dir, set_reel_depth, set_reel_level, ALL_STOP_FLAG, reel_flag;
 
 void initReel();
 int goToClick(int);

@@ -1,37 +1,6 @@
 #include <msp430.h>
 #include "reels.h"
 
-volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG=1, reel_flag=0, set_reel_level;
-
-
-int main(void) {
-
-	volatile int n, k;
-	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
-	__delay_cycles(50000);__delay_cycles(50000);
-	__delay_cycles(50000);
-	__delay_cycles(50000);__delay_cycles(50000);
-	__delay_cycles(50000);
-	BCSCTL1 = CALBC1_16MHZ;                    // Set DCO
-	DCOCTL = CALDCO_16MHZ;
-	for (k=0;k<200;k++)
-		__delay_cycles(50000);
-
-	__bis_SR_register(GIE);  // Enable interrupts (yes this is needed)
-	__delay_cycles(50000);
-
-	initReel();
-
-	while(1){
-		if(reel_flag)
-		{
-			goToClick(set_reel_depth);
-
-		}
-
-	}
-	return 0;
-}//main()
 
 
 void initReel(){
@@ -64,7 +33,9 @@ void initReel(){
 	cur_reel_depth = 0;
 	set_reel_depth = 0;
 	reel_dir = 0;
-	ALL_STOP_FLAG = 0;
+	reel_flag = 0;
+	set_reel_level = 0;
+	ALL_STOP_FLAG = 1;
 
 	__bis_SR_register(GIE);
 
@@ -90,6 +61,7 @@ int goToClick(int setClick){
 	}
 	else{
 		reel_dir = 0;
+		reel_flag = 0;
 		TA1CCR2 = PWM_NEU;
 		set_reel_level = 0;
 		setReelLevel();
