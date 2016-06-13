@@ -36,6 +36,7 @@ void initReel(){
 	reel_flag = 0;
 	ALL_STOP_FLAG = 1;
 	status_code = 0;
+	interrupt_code = 0;
 
 	__bis_SR_register(GIE);
 
@@ -50,7 +51,7 @@ int goToClick(int setClick){
 	}
 	if(timeout_count2 > REEL_TIMEOUT_2){
 		ALL_STOP_FLAG = 1;
-		return 4;
+		return 3;
 	}
 
 	if(cur_reel_depth != setClick){
@@ -96,6 +97,8 @@ int setReelLevel(int set_reel_level){
 		TA1CCR1 == 0;
 	}
 
+	return 0;
+
 }
 
 
@@ -104,29 +107,41 @@ int setReelLevel(int set_reel_level){
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
 {
-	//Hardware interrupt for limit switch
-	cur_reel_depth = 0;
-	ALL_STOP_FLAG = 1;
-	status_code = 3;  //Limit switch hit
-	P1IFG &= ~BIT4;
+		//Hardware interrupt for limit switch
+		if(reel_dir == 1 && reel_flag == 1){
+			cur_reel_depth = 0;
+			reel_dir = 0;
+			reel_flag = 0;
+			status_code = 0;
+			interrupt_code = 1;  //Limit switch hit
+		}
+		else{
+			reel_flag = 0;
+			interrupt_code = 2; // Limit switch error
+		}
+
+		ALL_STOP_FLAG = 1;
+		P1IFG &= ~BIT4;
 }
 
 // Port 2 ISR
 #pragma vector=PORT2_VECTOR
 __interrupt void Port_2(void)
 {
-	//Hardware interrupt for click counter
-	if(reel_dir == 2)
-		cur_reel_depth++;
-	if(reel_dir == 1)
-		cur_reel_depth--;
-	if(cur_reel_depth < MIN_CLICKS || cur_reel_depth > MAX_CLICKS){
-		ALL_STOP_FLAG = 1;
-		status_code = 6; //Clicks out of bounds
-	}
 
-	timeout_count1 = 0;
-	timeout_count2 = 0;
+		//Hardware interrupt for click counter
+		if(reel_dir == 2)
+			cur_reel_depth++;
+		if(reel_dir == 1)
+			cur_reel_depth--;
+		if(cur_reel_depth < MIN_CLICKS || cur_reel_depth > MAX_CLICKS){
+			ALL_STOP_FLAG = 1;
+			interrupt_code = 3; //Clicks out of bounds
+		}
 
-	P2IFG &= ~BIT0;
+		timeout_count1 = 0;
+		timeout_count2 = 0;
+
+		P2IFG &= ~BIT0;
+
 }

@@ -11,7 +11,7 @@ int input_handler (char *, char *);
 void num2str(int ,char *,int );
 
 volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG, reel_flag;
-volatile int status_code;
+volatile int status_code, interrupt_code;
 volatile unsigned int timeout_count1, timeout_count2;
 
 int main(void) {
@@ -71,8 +71,6 @@ int main(void) {
 			TA1CCR2 = 0;
 		}
 
-
-
 	}
 }
 
@@ -85,6 +83,7 @@ int input_handler (char *instring, char *outstring){
 			reel_flag=1;
 			timeout_count1 = 0;
 			timeout_count2 = 0;
+			interrupt_code = 0;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
@@ -99,6 +98,7 @@ int input_handler (char *instring, char *outstring){
 		if (instring[1]=='U'){				// Set values for the depth of clicks the reel will go to
 			set_reel_depth=-1;
 			reel_flag=1;
+			interrupt_code = 0;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
@@ -110,7 +110,7 @@ int input_handler (char *instring, char *outstring){
 		break;
 	case 'Q':
 		outstring[0]=(0x30+ALL_STOP_FLAG);
-		outstring[1]=(0x30+reel_flag);
+		outstring[1]=(0x30+interrupt_code);
 		outstring[2]=(0x30+status_code);
 		retval=1;
 		break;
@@ -162,6 +162,8 @@ void all_stop_fun(void){
 	TA0CCR2 = 0;
 	TA1CCR1 = 0;
 	TA1CCR2 = 0;
+	reel_flag = 0;
+	reel_dir = 0;
 
 	status_code = 5;
 }
