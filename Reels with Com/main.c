@@ -11,6 +11,7 @@ int input_handler (char *, char *);
 void num2str(int ,char *,int );
 
 volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG, reel_flag, set_reel_level;
+volatile unsigned int timeout_count1, timeout_count2;
 
 int main(void) {
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
@@ -81,11 +82,13 @@ int input_handler (char *instring, char *outstring){
 		if (instring[1]=='D'){				// Set values for the depth of clicks the reel will go to
 			set_reel_depth=str2num(instring+2,3);
 			reel_flag=1;
+			timeout_count1 = 0;
+			timeout_count2 = 0;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
 		break;
-		if (instring[1]=='L'){				// Set values for the depth of clicks the reel will go to
+		if (instring[1]=='L'){				// Set values for the level of the reel
 			set_reel_depth=str2num(instring+2,3);
 			reel_flag=1;
 			retval=0;
@@ -160,6 +163,10 @@ void num2str(int inval,char *outstring,int n){
 
 void all_stop_fun(void){
 	// turn off all pwm channels and all motors
+	TA0CCR1 = 0;
+	TA0CCR2 = 0;
+	TA1CCR1 = 0;
+	TA1CCR2 = 0;
 }
 
 

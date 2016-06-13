@@ -43,6 +43,17 @@ void initReel(){
 
 int goToClick(int setClick){
 
+	timeout_count1++;
+
+	if(timeout_count1 > REEL_TIMEOUT_1){
+		timeout_count1 = 0;
+		timeout_count2++;
+	}
+	if(timeout_count2 > REEL_TIMEOUT_2){
+		ALL_STOP_FLAG = 1;
+		return -1;
+	}
+
 	if(cur_reel_depth != setClick){
 		if(cur_reel_depth > setClick){
 			reel_dir = 1;
@@ -130,6 +141,9 @@ __interrupt void Port_2(void)
 		cur_reel_depth++;
 	if(reel_dir == 1)
 		cur_reel_depth--;
+
+	timeout_count1 = 0;
+	timeout_count2 = 0;
 
 	P2IFG &= ~BIT0;
 }
