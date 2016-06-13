@@ -54,7 +54,7 @@ int goToClick(int setClick){
 		return 3;
 	}
 
-	if(cur_reel_depth != setClick){
+	if(cur_reel_depth != setClick && (P1IN & BIT4)){
 		if(cur_reel_depth > setClick){
 			reel_dir = 1;
 			TA1CCR2 = PWM_MIN;
@@ -74,10 +74,13 @@ int goToClick(int setClick){
 		TA1CCR2 = PWM_NEU;
 		setReelLevel(0);
 		ALL_STOP_FLAG = 1;
-		return 0;
 	}
+	if(P1IN & BIT4)
+		return 0;
+	else
+		interrupt_code = 2;
+	return 5;
 
-	return 0;
 }//goToClick()
 
 int setReelLevel(int set_reel_level){
@@ -132,14 +135,17 @@ __interrupt void Port_2(void)
 {
 
 	//Hardware interrupt for click counter
-	if(reel_dir == 2)
+	if(reel_dir == 2 && reel_flag)
 		cur_reel_depth++;
-	if(reel_dir == 1)
+	if(reel_dir == 1 && reel_flag)
 		cur_reel_depth--;
-	if(cur_reel_depth < MIN_CLICKS || cur_reel_depth > MAX_CLICKS){
+	if(cur_reel_depth > MAX_CLICKS){
 		ALL_STOP_FLAG = 1;
+		reel_flag = 0;
 		interrupt_code = 3; //Clicks out of bounds
 	}
+	if(cur_reel_depth < MIN_CLICKS)
+		cur_reel_depth = 0;
 
 	timeout_count1 = 0;
 	timeout_count2 = 0;
