@@ -9,6 +9,7 @@
 int str2num(char *,int );
 int input_handler (char *, char *);
 void num2str(int ,char *,int );
+void all_stop_fun(void);
 
 volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG, reel_flag;
 volatile int status_code, interrupt_code;
@@ -95,7 +96,7 @@ int input_handler (char *instring, char *outstring){
 		}
 		break;
 	case 'P':
-		if (instring[1]=='U'){				// Set values for the depth of clicks the reel will go to
+		if (instring[1]=='U'){				// Pull Up Reel
 			set_reel_depth=-1;
 			reel_flag=1;
 			interrupt_code = 0;
@@ -115,10 +116,10 @@ int input_handler (char *instring, char *outstring){
 		retval=1;
 		break;
 	default:
-		outstring[0]='B';
-		outstring[1]='a';
-		outstring[2]='d';
-		retval=7;
+		outstring[0]='E';
+		outstring[1]='r';
+		outstring[2]='r';
+		retval=3;
 		break;
 	}
 
@@ -165,7 +166,7 @@ void all_stop_fun(void){
 	reel_flag = 0;
 	reel_dir = 0;
 
-	status_code = 5;
+	status_code = 4;
 }
 
 

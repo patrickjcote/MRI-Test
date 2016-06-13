@@ -76,6 +76,8 @@ int goToClick(int setClick){
 		ALL_STOP_FLAG = 1;
 		return 0;
 	}
+
+	return 0;
 }//goToClick()
 
 int setReelLevel(int set_reel_level){
