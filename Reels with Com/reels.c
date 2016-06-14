@@ -5,6 +5,10 @@
 
 void initReel(){
 
+	//LED Indicator and MCP Reset
+	P2DIR |= BIT5 + BIT6;
+	P2OUT |= BIT5 + BIT6;
+
 	//Limit Switch input
 	P1DIR &= ~BIT4;				// Limit switch input on 1.4
 	P1IE |=  BIT4;				// 1.4 interrupt enabled
