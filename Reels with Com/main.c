@@ -77,10 +77,10 @@ int main(void) {
 
 int input_handler (char *instring, char *outstring){
 	int retval=0;
-	switch (instring[0]){
+	switch (instring[1]){
 	case 'R':
-		if (instring[1]=='D'){				// Set values for the depth of clicks the reel will go to
-			set_reel_depth=str2num(instring+2,3);
+		if (instring[2]=='D'){				// Set values for the depth of clicks the reel will go to
+			set_reel_depth=str2num(instring+3,3);
 			reel_flag=1;
 			timeout_count1 = 0;
 			timeout_count2 = 0;
@@ -90,13 +90,13 @@ int input_handler (char *instring, char *outstring){
 		}
 		break;
 	case 'C':
-		if (instring[1]=='D'){				// Set values for the depth of clicks the reel will go to
+		if (instring[2]=='D'){				// Set values for the depth of clicks the reel will go to
 			num2str(cur_reel_depth,outstring,3);
 			retval=3;
 		}
 		break;
 	case 'P':
-		if (instring[1]=='U'){				// Pull Up Reel
+		if (instring[2]=='U'){				// Pull Up Reel
 			set_reel_depth=-1;
 			reel_flag=1;
 			interrupt_code = 0;
@@ -116,9 +116,9 @@ int input_handler (char *instring, char *outstring){
 		retval=1;
 		break;
 	default:
-		outstring[0]='E';
-		outstring[1]='r';
-		outstring[2]='r';
+		outstring[0]= instring[0];
+		outstring[1]= instring[1];
+		outstring[2]= instring[2];
 		retval=3;
 		break;
 	}
