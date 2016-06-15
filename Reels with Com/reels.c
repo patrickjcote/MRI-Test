@@ -33,6 +33,12 @@ void initReel(){
 	P2SEL |= BIT4;				//TA1.2 Output on P2.4
 	P2DIR |= BIT2;				// P2.2 Actuator PWM
 	P2SEL |= BIT2;				//TA1.1 Output to  P2.2
+	//PWM IN
+	CCR0 = 50000;
+	TACTL = TASSEL_2 + MC_2+ID_3;
+	P1IE |= BIT5;                             // P2.0 interrupt enabled
+	P1IES |= BIT5;                            // P2.0 Hi/lo edge
+	P1IFG &= ~BIT5;                           // P2.0 IFG cleared
 	//Init Globals
 	cur_reel_depth = 0;
 	set_reel_depth = 0;
@@ -116,21 +122,52 @@ int setReelLevel(int set_reel_level){
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
 {
-	//Hardware interrupt for limit switch
-	if(reel_dir == 1 && reel_flag == 1 && cur_reel_depth < LIMIT_SWITCH_MIN){
-		cur_reel_depth = 0;
-		reel_dir = 0;
-		reel_flag = 0;
-		status_code = 0;
-		interrupt_code = 1;  //Limit switch hit
-	}
-	else{
-		reel_flag = 0;
-		interrupt_code = 2; // Limit switch error
-	}
+	if(P1IFG & BIT4){
+		//Hardware interrupt for limit switch
+		if(reel_dir == 1 && reel_flag == 1 && cur_reel_depth < LIMIT_SWITCH_MIN){
+			cur_reel_depth = 0;
+			reel_dir = 0;
+			reel_flag = 0;
+			status_code = 0;
+			interrupt_code = 1;  //Limit switch hit
+		}
+		else{
+			reel_flag = 0;
+			interrupt_code = 2; // Limit switch error
+		}
 
-	ALL_STOP_FLAG = 1;
-	P1IFG &= ~BIT4;
+		ALL_STOP_FLAG = 1;
+		P1IFG &= ~BIT4;
+	}
+	if(P1IFG & BIT5){ //PWM In read
+
+		if (P1IN&BIT5){		//Positive Edge
+			if (TA0R>(0xFFFF-4000)){
+				pwmread-=TA0R;
+				TA0R=0;
+			}
+			pwmread=TA0R;
+			P1IES |= BIT5;
+		}
+		else{				//Negative Edge
+			pwmval=TA0R-pwmread;
+
+			P1IES &=~ BIT5;
+		}
+
+		if(pwmval > PWM_NEU){
+			set_reel_depth= -10;
+			reel_flag = 1;
+			ALL_STOP_FLAG = 0;
+			interrupt_code = 4;
+		}
+
+		P1IFG &= ~BIT5;
+
+
+
+
+	}
 }
 
 // Port 2 ISR
