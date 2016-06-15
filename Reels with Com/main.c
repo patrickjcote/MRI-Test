@@ -113,7 +113,7 @@ int input_handler (char *instring, char *outstring){
 		outstring[0]=(0x30+ALL_STOP_FLAG);
 		outstring[1]=(0x30+interrupt_code);
 		outstring[2]=(0x30+status_code);
-		retval=1;
+		retval=3;
 		break;
 	default:
 		outstring[0]= instring[0];
