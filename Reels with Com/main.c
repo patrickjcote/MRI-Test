@@ -13,7 +13,7 @@ void all_stop_fun(void);
 
 volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG, reel_flag;
 volatile int status_code, interrupt_code;
-volatile unsigned int timeout_count1, timeout_count2;
+volatile unsigned int timeout_count1, timeout_count2, pwmread, pwmval;
 
 int main(void) {
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
@@ -113,7 +113,7 @@ int input_handler (char *instring, char *outstring){
 		outstring[0]=(0x30+ALL_STOP_FLAG);
 		outstring[1]=(0x30+interrupt_code);
 		outstring[2]=(0x30+status_code);
-		retval=1;
+		retval=3;
 		break;
 	default:
 		outstring[0]= instring[0];

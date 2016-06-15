@@ -21,11 +21,13 @@
 
 extern volatile int status_code, interrupt_code, ALL_STOP_FLAG;
 extern volatile int cur_reel_depth, reel_dir, set_reel_depth, reel_flag;
-extern volatile unsigned int timeout_count1, timeout_count2;
+extern volatile unsigned int timeout_count1, timeout_count2, pwmread, pwmval;
 
 void initReel();
 int goToClick(int);
 int setReelLevel(int);
 int conv_char_hex(char *,int );
+
+
 
 #endif
