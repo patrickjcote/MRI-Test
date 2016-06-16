@@ -56,7 +56,7 @@ int main(void) {
 		}
 		if (i2crxflag){					// if data received as the I2C slave
 			__delay_cycles(50000);
-			ok2send=input_handler(i2cRXData,i2cTXData);
+			ok2send=input_handler(i2cRXData+1,i2cTXData);
 			i2crxflag=0;
 
 		}
@@ -77,10 +77,10 @@ int main(void) {
 
 int input_handler (char *instring, char *outstring){
 	int retval=0;
-	switch (instring[1]){
+	switch (instring[0]){
 	case 'R':
-		if (instring[2]=='D'){				// Set values for the depth of clicks the reel will go to
-			set_reel_depth=str2num(instring+3,3);
+		if (instring[1]=='D'){				// Set values for the depth of clicks the reel will go to
+			set_reel_depth=str2num(instring+2,3);
 			reel_flag=1;
 			timeout_count1 = 0;
 			timeout_count2 = 0;
@@ -90,13 +90,13 @@ int input_handler (char *instring, char *outstring){
 		}
 		break;
 	case 'C':
-		if (instring[2]=='D'){				// Set values for the depth of clicks the reel will go to
+		if (instring[1]=='D'){				// Set values for the depth of clicks the reel will go to
 			num2str(cur_reel_depth,outstring,3);
 			retval=3;
 		}
 		break;
 	case 'P':
-		if (instring[2]=='U'){				// Pull Up Reel
+		if (instring[1]=='U'){				// Pull Up Reel
 			set_reel_depth=-1;
 			reel_flag=1;
 			interrupt_code = 0;
