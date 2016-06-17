@@ -1,8 +1,7 @@
 #include <msp430.h>
 #include "serial_handler.h"
 
-#define PURGE_TIME1 3000
-#define PURGE_TIME2 1		//Minutes
+
 
 
 int str2num(char *,int );
@@ -11,7 +10,7 @@ void num2str(int ,char *,int );
 void all_stop_fun(void);
 
 volatile int purge_flag, valve_dir, ALL_STOP_FLAG;
-volatile unsigned int purge_count1, purge_count2;
+volatile unsigned int set_purge_time, purge_timer, purge_compare;
 
 
 int main(void) {
@@ -27,17 +26,31 @@ int main(void) {
 	for (k=0;k<200;k++)
 		__delay_cycles(50000);
 
-	//Init Valves Board
-	//Purge timer
-	TA1CCR0 = 40000;
-	TA1CTL = TASSEL_2 + MC_1 + ID_3;
-	TA1CCTL0 = CCIE;
+
 	//LED Indicator and MCP Reset
 	P2DIR |= BIT5 + BIT6;
 	P2OUT |= BIT5 + BIT6;
+	//PWM IN
+	CCR0 = 50000;
+	TACTL = TASSEL_2 + MC_2+ID_3;
+	P1IE |= BIT5;                             // P2.0 interrupt enabled
+	P1IES |= BIT5;                            // P2.0 Hi/lo edge
+	P1IFG &= ~BIT5;                           // P2.0 IFG cleared
+	//Init Valves Board
+	//Purge timer
+	TA1CCR0 = 0xFFFF;
+	TA1CTL = TASSEL_2 + MC_1 + ID_3;
+	TA1CCTL0 = CCIE;
+
+	//Valve and pump output
+	P2DIR |= BIT0 + BIT1;
+	P2OUT &= ~BIT0;
+	P2OUT &= ~BIT1;
 	purge_flag = 0;
-	purge_count1 = 0;
-	purge_count2 = 0;
+	set_purge_time = 0;
+	purge_timer = 0;
+	purge_compare = 0;
+	ALL_STOP_FLAG = 1;
 
 	__bis_SR_register(GIE);
 	i2cTXData[0]=3;			//Dummy values first input to i2cTXData
@@ -68,12 +81,15 @@ int main(void) {
 		}
 		if (!ALL_STOP_FLAG){
 			if(purge_flag){
-				P1OUT |= BIT1;
+				P2OUT &= ~BIT1;
 			}
 
 		}
 		if (ALL_STOP_FLAG){
-
+			P2OUT |= BIT1;
+			purge_flag=0;
+			set_purge_time = 0;
+			purge_timer = 0;
 		}
 	}//
 }
@@ -82,13 +98,49 @@ int input_handler (char *instring, char *outstring){
 	int retval=0;
 	switch (instring[0]){
 	case 'P':
-		purge_flag = 1;
-		ALL_STOP_FLAG=0;
+		if(P2OUT&BIT0){
+			purge_flag = 1;
+			set_purge_time = str2num(instring+1,3);
+			ALL_STOP_FLAG=0;
+			num2str(1,outstring,3);
+			retval=3;
+		}
+		else{
+			outstring[0] = 'V';
+			outstring[1] = 'l';
+			outstring[2] = 'V';
+			retval=3;
+		}
+		break;
+	case 'V':
+		if(instring[1] == 'S')
+			P2OUT &= ~BIT0;
+		else
+			P2OUT |= BIT0;
 		retval = 0;
 		break;
+	case 'T':
+		if(P2OUT & BIT1)
+			outstring[0] = '1';
+		else
+			outstring[0] = '0';
+		if(P2OUT & BIT0)
+			outstring[1] = '1';
+		else
+			outstring[1] = '0';
+		outstring[2]= 'x';
+		retval=3;
+		break;
+	case 'Q':
+		num2str((set_purge_time - purge_timer),outstring,3);
+		retval=3;
+		break;
 	case 'S':
-		ALL_STOP_FLAG=0;
+		ALL_STOP_FLAG=1;
+		purge_flag=0;
 		retval = 0;
+		set_purge_time = 0;
+		purge_timer = 0;
 		break;
 	default:
 		outstring[0]= instring[0];
@@ -146,13 +198,15 @@ __interrupt void Timer_A (void)
 {
 	if(purge_flag){
 		P2OUT ^= BIT5;
-		purge_count1++;
-		if(purge_count1 > PURGE_TIME1)
-			purge_count2++;
-		if(purge_count2 > PURGE_TIME2){
-			purge_flag = 0;
-			purge_count1 = 0;
-			purge_count2 = 0;
+		purge_compare++;
+		if(purge_compare > 65){
+			purge_timer++;
+			purge_compare = 0;
+		}
+		if(purge_timer > set_purge_time){
+			P2OUT |= BIT0 + BIT5;
+			purge_flag=0;
+			purge_timer = 0;
 		}
 	}
 }
