@@ -16,4 +16,3 @@ elif(cmd == "pu"):
     x.pu()
 elif(cmd == "s"):
     x.s()
-    
