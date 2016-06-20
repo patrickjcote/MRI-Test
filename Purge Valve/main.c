@@ -30,6 +30,10 @@ int main(void) {
 	//LED Indicator and MCP Reset
 	P2DIR |= BIT5 + BIT6;
 	P2OUT |= BIT5 + BIT6;
+
+	P1DIR |= BIT4;
+	P1OUT &= ~BIT4;
+
 	//PWM IN
 	CCR0 = 50000;
 	TACTL = TASSEL_2 + MC_2+ID_3;
@@ -81,12 +85,13 @@ int main(void) {
 		}
 		if (!ALL_STOP_FLAG){
 			if(purge_flag){
-				P2OUT &= ~BIT1;
+				P2OUT |= BIT1;
+				P2OUT &= ~BIT0;
 			}
 
 		}
 		if (ALL_STOP_FLAG){
-			P2OUT |= BIT1;
+			P2OUT &= ~BIT1;
 			purge_flag=0;
 			set_purge_time = 0;
 			purge_timer = 0;
@@ -98,7 +103,7 @@ int input_handler (char *instring, char *outstring){
 	int retval=0;
 	switch (instring[0]){
 	case 'P':
-		if(P2OUT&BIT0){
+		if(!(P2OUT&BIT0)){
 			purge_flag = 1;
 			set_purge_time = str2num(instring+1,3);
 			ALL_STOP_FLAG=0;
@@ -114,24 +119,24 @@ int input_handler (char *instring, char *outstring){
 		break;
 	case 'V':
 		if(instring[1] == 'S')
-			P2OUT &= ~BIT0;
-		else
 			P2OUT |= BIT0;
+		if(instring[1] == 'P')
+			P2OUT &= ~BIT0;
 		retval = 0;
 		break;
-	case 'T':
+	case 'Q':
 		if(P2OUT & BIT1)
 			outstring[0] = '1';
 		else
 			outstring[0] = '0';
 		if(P2OUT & BIT0)
-			outstring[1] = '1';
+			outstring[2] = '1';
 		else
-			outstring[1] = '0';
-		outstring[2]= 'x';
+			outstring[2] = '0';
+		outstring[1]= 'x';
 		retval=3;
 		break;
-	case 'Q':
+	case 'T':
 		num2str((set_purge_time - purge_timer),outstring,3);
 		retval=3;
 		break;
@@ -198,15 +203,19 @@ __interrupt void Timer_A (void)
 {
 	if(purge_flag){
 		P2OUT ^= BIT5;
+		P2OUT |= BIT1;
 		purge_compare++;
-		if(purge_compare > 65){
+		if(purge_compare > 50){
 			purge_timer++;
 			purge_compare = 0;
 		}
 		if(purge_timer > set_purge_time){
-			P2OUT |= BIT0 + BIT5;
+			P2OUT &= ~BIT1;
 			purge_flag=0;
 			purge_timer = 0;
+			ALL_STOP_FLAG = 1;
 		}
 	}
+
+
 }
