@@ -1,7 +1,9 @@
 <?php
 
-$current_depth = shell_exec("sudo python reel-input.py cd 0 &");
-$current_status = shell_exec("sudo python reel-input.py q 0 &");
+$current_depth = shell_exec("sudo python hose-reel.py cd 0 &");
+$current_status = shell_exec("sudo python hose-reel.py q 0 &");
+$current_pump = shell_exec("sudo python valve.py t 0 &");
+$current_valve = shell_exec("sudo python valve.py q 0 &");
 
 switch($current_status){
 case 100:
@@ -28,9 +30,19 @@ default:
         break;
 }
 
+switch($current_valve){
 
+case 0x1:
+        $valve = "Sampler Line";
+        break;
+default:
+        $valve = "Purge Line";
+        break;
+}
 
 ?>
-
         Current Depth: <?php echo $current_depth;?><br>
-        Current Status: <?php echo $status;?><br>
+        Reel Status: <?php echo $status;?><br>
+        Pump Time Remaining: <?php echo $current_pump;?><br>
+        Valve Status: <?php echo $valve;?><br>
+
