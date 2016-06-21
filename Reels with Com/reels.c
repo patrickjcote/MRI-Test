@@ -44,6 +44,7 @@ void initReel(){
 	set_reel_depth = 0;
 	reel_dir = 0;
 	reel_flag = 0;
+	pu_flag = 0;
 	ALL_STOP_FLAG = 1;
 	status_code = 0;
 	interrupt_code = 0;
@@ -96,7 +97,7 @@ int goToClick(int setClick){
 int setReelLevel(int set_reel_level){
 	if(set_reel_level == 3){
 		volatile int currentWrap;
-		currentWrap = (cur_reel_depth / TURNS_PER_WRAP)+1;
+		currentWrap = (cur_reel_depth / TURNS_PER_WRAP)+2;
 
 		if(currentWrap % 2)
 			TA1CCR1=PWM_MIN;
@@ -130,6 +131,8 @@ __interrupt void Port_1(void)
 			reel_flag = 0;
 			status_code = 0;
 			interrupt_code = 1;  //Limit switch hit
+			if(pu_flag)
+				interrupt_code = 0;
 		}
 		else{
 			reel_flag = 0;

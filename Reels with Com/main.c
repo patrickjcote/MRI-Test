@@ -12,12 +12,12 @@ void num2str(int ,char *,int );
 void all_stop_fun(void);
 
 volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG, reel_flag;
-volatile int status_code, interrupt_code;
+volatile int status_code, interrupt_code, pu_flag;
 volatile unsigned int timeout_count1, timeout_count2, pwmread, pwmval;
 
 int main(void) {
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
-	volatile char identify[]="Reels";
+	volatile char identify[]="HReel";
 	volatile int n, k, ok2send=0;
 	__delay_cycles(50000);
 	i2c_slave_init(0x48);  //Set slave address to 0x48
@@ -97,10 +97,11 @@ int input_handler (char *instring, char *outstring){
 		break;
 	case 'P':
 		if (instring[1]=='U'){				// Pull Up Reel
-			set_reel_depth=-1;
+			set_reel_depth=-6;
 			reel_flag=1;
 			interrupt_code = 0;
 			retval=0;
+			pu_flag = 1;
 			ALL_STOP_FLAG=0;
 		}
 		break;

@@ -20,7 +20,7 @@
 #define PWM_NEU 3000		// PWM Neutral limit
 
 extern volatile int status_code, interrupt_code, ALL_STOP_FLAG;
-extern volatile int cur_reel_depth, reel_dir, set_reel_depth, reel_flag;
+extern volatile int cur_reel_depth, reel_dir, set_reel_depth, reel_flag, pu_flag;
 extern volatile unsigned int timeout_count1, timeout_count2, pwmread, pwmval;
 
 void initReel();
