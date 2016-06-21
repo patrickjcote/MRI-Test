@@ -110,6 +110,11 @@ int input_handler (char *instring, char *outstring){
 		all_stop_fun();
 		retval=0;
 		break;
+	case 'I':
+		outstring[0]= 'O';
+		outstring[1]= 'k';
+		retval=2;
+		break;
 	case 'Q':
 		outstring[0]=(0x30+ALL_STOP_FLAG);
 		outstring[1]=(0x30+interrupt_code);
