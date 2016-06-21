@@ -35,6 +35,11 @@ class Reel:
         time.sleep(.01)
         self.read()
 
+    def i(self):
+        self.bus.write_i2c_block_data(self.address, 0 , map(ord,'I'))
+        time.sleep(.01)
+        self.read()
+
     def pu(self):
         self.bus.write_i2c_block_data(self.address, 0 , map(ord,'PU'))
 
@@ -57,7 +62,9 @@ elif(cmd == "cd"):
     x.cd()
 elif(cmd == "q"):
     x.q()
-elif(cmd == "pu"):
-    x.pu()
+elif(cmd == "i"):
+    x.i()
 elif(cmd == "s"):
     x.s()
+elif(cmd == "pu"):
+    x.pu()

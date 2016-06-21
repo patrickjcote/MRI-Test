@@ -30,19 +30,16 @@ default:
         break;
 }
 
-switch($current_valve){
-
-case 0x1:
+if($current_valve[2] == "1")
         $valve = "Sampler Line";
-        break;
-default:
+else
         $valve = "Purge Line";
-        break;
-}
+
+$time_m = intval(floor(intval($current_pump)/60));
+$time_s = intval($current_pump) % 60;
 
 ?>
         Current Depth: <?php echo $current_depth;?><br>
         Reel Status: <?php echo $status;?><br>
-        Pump Time Remaining: <?php echo $current_pump;?><br>
+        Pump Time Remaining: <?php echo sprintf("%02d:%02d", $time_m, $time_s);?><br>
         Valve Status: <?php echo $valve;?><br>
-
