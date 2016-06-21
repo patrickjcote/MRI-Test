@@ -92,6 +92,7 @@ int main(void) {
 		}
 		if (ALL_STOP_FLAG){
 			P2OUT &= ~BIT1;
+			P2OUT |= BIT5;
 			purge_flag=0;
 			set_purge_time = 0;
 			purge_timer = 0;
@@ -139,6 +140,11 @@ int input_handler (char *instring, char *outstring){
 	case 'T':
 		num2str((set_purge_time - purge_timer),outstring,3);
 		retval=3;
+		break;
+	case 'I':
+		outstring[0]= 'O';
+		outstring[1]= 'k';
+		retval=2;
 		break;
 	case 'S':
 		ALL_STOP_FLAG=1;
