@@ -100,13 +100,13 @@ int setReelLevel(int set_reel_level){
 		currentWrap = (cur_reel_depth / TURNS_PER_WRAP)+2;
 
 		if(currentWrap % 2)
-			TA1CCR1=PWM_MIN;
+			TA1CCR1=PWM_MIN2;
 		else
-			TA1CCR1=PWM_MAX;
+			TA1CCR1=PWM_MAX2;
 		return 1;
 	}
 	if(set_reel_level == 2){ //Reeling down
-		TA1CCR1 = PWM_MIN;
+		TA1CCR1 = PWM_MIN2;
 	}
 	if(set_reel_level == 0 || ALL_STOP_FLAG == 1)
 	{
