@@ -1,11 +1,9 @@
 #include <msp430.h>
 #include "i2c.h"
 #include "float.h"
+#include "math.h"
 /*
  * main.c
- *
- * This code is an I2C master specifically for the 2016 NRMC team.  This device specifically controls the feedback control of a gyro and acclerometer.
- * You can auto level the platform of that is holding the lidar on the robot.  This also returns values from the gyro and the accelerometer.
  *
  * Pinout
  * Pin 1.0 I2c Master SDA       Configured to interface to the HMC Magnetometer
@@ -20,13 +18,6 @@
  * 4-LSB of y axis accelerometer data
  * 5-MSB of z axis accelerometer data
  * 6-LSB of z axis accelerometer data
-\ *
- * You can also activate the servos to auto level the platform by executing a * followed by the address and then a 5 digit number.  The five digit number sequence can only be a value of 0,1,2.
- *
- * mode 0:  no auto leveling occuring.
- * Mode 1:  auto level indefinately.
- * Mode 2:  Auto level until it is stable and zerod then stop
-
  *
  */
 
@@ -34,21 +25,27 @@
 #define PWM_MAX	3500		// PWM high limit
 #define PWM_MIN  2500		// PWM low limit
 #define PWM_NEU  3000		// PWM Neutral limit
-#define ANGLE_DIF 50
+#define AVG_SAMPLES 10
+#define SAMPLE_TIMER 400
+#define PI 3.14159265
+#define ANGLE_TOLERANCE 7
 
 unsigned char TXData[64],RXData[64];		//Buffers for the Slave of ths device
 volatile int TXData_ptr=0,RXData_ptr=0,i2crxflag=0;		//Pointers and flags for the slave device
 volatile int sampstate=0,i2cmode=0;  //Sampstate can be 0-idle 1-pumping forward 2-pumping reverse 3-moving sampler
+volatile unsigned int avg_ptr = 0, sample_count = 0, autolvl_flg = 0;
+float current_angle, avg_angle[AVG_SAMPLES], set_angle, average;
+
 int conv_char_hex(char *,int );
 void init_ADXL(void);
 void read_ADXL(int *);
-int autoLevel(int, int *);
+int autoLevel();
 
 
 int main(void) {
-	int accelvec[3],k;
-	float pwmfloatx=0,pwmfloaty=0;
-	int pwmcount=0,autolevel=0;
+
+	volatile unsigned int k;
+
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
 	__delay_cycles(50000);__delay_cycles(50000);
 	__delay_cycles(50000);
@@ -60,7 +57,6 @@ int main(void) {
 		__delay_cycles(50000);
 
 	//Start pwmoutput
-
 	P2DIR |= BIT2; // P2.2 Auto-Level PWM
 	P2SEL |= BIT2 ;
 	TA1CCR0 = 40000;
@@ -78,15 +74,13 @@ int main(void) {
 
 	__delay_cycles(50000);
 	init_ADXL();
-	__delay_cycles(50000);
-	//	init_ADXL();
-	//	__delay_cycles(50000);
-	//	init_ADXL();
+	sample_count = 0;
 	__bis_SR_register(GIE);  // Enable interrupts (yes this is needed)
 	__delay_cycles(50000);
+	k=0;
 	while(1){
 		__delay_cycles(50000);
-
+		int accelvec[3];
 
 		read_ADXL(accelvec);
 
@@ -96,28 +90,59 @@ int main(void) {
 		TXData[1]=((accelvec[0]>>8)&0xFF);
 		TXData[4]=(accelvec[1]&0xFF0);
 		TXData[3]=((accelvec[1]>>8)&0xFF);
-		TXData[6]=(accelvec[2]&0xFF0);
-		TXData[5]=((accelvec[2]>>8)&0xFF);
+
 		__delay_cycles(50000);
 
-		autoLevel(1, &accelvec);
+		current_angle = atan((float)accelvec[0]/(float)accelvec[1]);
 
+		current_angle *= 180/PI; //rads to degrees
+
+		set_angle = 10;
+
+		if(k>65000){
+			if(sample_count > SAMPLE_TIMER){
+				autolvl_flg = 1;
+				sample_count = 0;
+			}
+			sample_count++;
+			k = 0;
+		}
+		k++;
+
+		if(autolvl_flg){
+			autoLevel();
+			autolvl_flg = 0;
+		}
 	}
 }
 
-int autoLevel(int setAngle, int *accelvec){
-			if(setAngle == 0){
-				TA1CCR1 = 0;
-				return 0;
-			}
-			//code to auto_level
-			if(accelvec[0] > (ANGLE_DIF + setAngle))
-				TA1CCR1=PWM_MIN;
-			else if(accelvec[0] < (-ANGLE_DIF + setAngle))
-				TA1CCR1=PWM_MAX;
-			else
-				TA1CCR1=PWM_NEU;
-			return 1;
+int autoLevel(){
+
+	volatile int i = 0;
+	float sum = 0;
+
+
+	if(avg_ptr == AVG_SAMPLES)
+		avg_ptr = 0;
+
+	avg_angle[avg_ptr] = current_angle;
+
+	for(i=0; i<AVG_SAMPLES; i++){
+		sum += avg_angle[i];
+	}
+
+	avg_ptr++;
+
+	average = sum/((float)AVG_SAMPLES);
+
+	if(average > (set_angle + ANGLE_TOLERANCE))
+		TA1CCR1=PWM_MIN;
+	else if(average < (set_angle - ANGLE_TOLERANCE) )
+		TA1CCR1=PWM_MAX;
+	else
+		TA1CCR1=PWM_NEU;
+
+	return 1;
 }//autoLevel
 
 
@@ -223,7 +248,9 @@ void read_ADXL(int *accel_vec){
 	//	for (n=0;n<3;n++){
 	//		conv_hex_dec(accel_vec[n]);
 	//		for (k=0;k<6;k++)
-	//			tx_data_str[k]=dec_str[k];
+	//			tx_data_str[k]=dec_	str[k];
 	//		uart_write_string(0,6);
 	//	}
 }
+
+
