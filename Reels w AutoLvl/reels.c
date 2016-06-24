@@ -32,19 +32,16 @@ void initReel(){
 	TA1CCTL2 = OUTMOD_7;
 	TA1CTL = TASSEL_2 + MC_1 + ID_3;
 	//PWM Outputs
-	P2DIR |= BIT4;				//Motor Control on P2.4
-	P2SEL |= BIT4;				//TA1.2 Output on P2.4
-	P2DIR |= BIT2;				// P2.2 Actuator PWM
-	P2SEL |= BIT2;				//TA1.1 Output to  P2.2
+	P2DIR |= BIT2 + BIT4;				//Motor Control P2.4 | Actuator P2.2
+	P2SEL |= BIT2 + BIT4;
 	//PWM IN
+	pwmread=TA0R;
 	CCR0 = 50000;
 	TACTL = TASSEL_2 + MC_2+ID_3;
 	P1IE |= BIT5;                             // P2.0 interrupt enabled
-	P1IES |= BIT5;                            // P2.0 Hi/lo edge
+	P1IES &= ~BIT5;                            // P2.0 Hi/lo edge
 	P1IFG &= ~BIT5;                           // P2.0 IFG cleared
-	//Level Timer
-	TA1CCR0 = 0xFFFF;
-	TA1CTL = TASSEL_2 + MC_1 + ID_3;
+	//Level Timer Interrupt
 	TA1CCTL0 = CCIE;
 	//Init Globals
 	cur_reel_depth = 0;
@@ -52,11 +49,13 @@ void initReel(){
 	reel_dir = 0;
 	reel_flag = 0;
 	pu_flag = 0;
-	ALL_STOP_FLAG = 1;
 	status_code = 0;
 	interrupt_code = 0;
 	set_angle = 0;
 	avg_pointer = 0;
+	autolevel_flag = 0;
+	lvl_compare = 0;
+	ALL_STOP_FLAG = 1;
 
 	__bis_SR_register(GIE);
 
@@ -77,22 +76,25 @@ int goToClick(int setClick){
 	if(cur_reel_depth != setClick && (P1IN & BIT4)){
 		if(cur_reel_depth > setClick){
 			reel_dir = 1;
-			TA1CCR2 = PWM_MIN;
-			setReelLevel(3);
+			TA1CCR2 = MOTOR_MIN;
+			if(!autolevel_flag)
+				autolevel_flag = 1;
 			return reel_dir;
 		}
 		if(cur_reel_depth < setClick){
 			reel_dir = 2;
-			TA1CCR2 = PWM_MAX;
-			setReelLevel(2);
+			TA1CCR2 = MOTOR_MAX;
+			if(!autolevel_flag)
+				autolevel_flag = 1;
 			return reel_dir;
 		}
 	}
 	else{
 		reel_dir = 0;
 		reel_flag = 0;
+		if(!autolevel_flag)
+			autolevel_flag = 0;
 		TA1CCR2 = PWM_NEU;
-		setReelLevel(0);
 		ALL_STOP_FLAG = 1;
 	}
 	if(P1IN & BIT4)
@@ -103,32 +105,33 @@ int goToClick(int setClick){
 
 }//goToClick()
 
-int setReelLevel(int set_reel_level){
-	if(set_reel_level == 3){
-		volatile int currentWrap;
-		currentWrap = (cur_reel_depth / TURNS_PER_WRAP)+2;
 
+void autoLevel(){
+	volatile int currentWrap;
+
+	currentWrap = (cur_reel_depth / TURNS_PER_WRAP)+2;
+	if(autolevel_flag == 2){
 		if(currentWrap % 2)
 			set_angle = +REELING_ANGLE;
 		else
 			set_angle = -REELING_ANGLE;
-		return 1;
-	}
-	if(set_reel_level == 2){ //Reeling down
-		TA1CCR1 = -REELING_ANGLE;
-	}
-	if(set_reel_level == 0 || ALL_STOP_FLAG == 1)
-	{
-		TA1CCR1 == 0;
 	}
 
-	return 0;
-
+	if(average > (set_angle + ANGLE_TOLERANCE)){
+		TA1CCR1=PWM_MIN;
+		ALL_STOP_FLAG = 0;
+	}
+	else if(average < (set_angle - ANGLE_TOLERANCE)){
+		TA1CCR1=PWM_MAX;
+		ALL_STOP_FLAG = 0;
+	}
+	else
+		TA1CCR1=PWM_NEU;
 }
 
-int autoLevel(){
+void getLevel(){
 
-	volatile int accelvec[3], sum, i;
+	int accelvec[3], sum, i;
 	read_ADXL(accelvec);
 
 	// Load data to return if asked for via I2C Slave
@@ -158,18 +161,6 @@ int autoLevel(){
 
 	average = ((float)sum/(float)SAMPLES)/(float)100;
 
-	if(average > (set_angle + ANGLE_TOLERANCE)){
-		TA1CCR1=PWM_MIN;
-		ALL_STOP_FLAG = 0;
-	}
-	else if(average < (set_angle - ANGLE_TOLERANCE)){
-		TA1CCR1=PWM_MAX;
-		ALL_STOP_FLAG = 0;
-	}
-	else
-		TA1CCR1=PWM_NEU;
-
-	return 1;
 }//autoLevel
 
 
@@ -205,7 +196,7 @@ __interrupt void Port_1(void)
 {
 	if(P1IFG & BIT4){
 		//Hardware interrupt for limit switch
-		if(reel_dir == 1 && reel_flag == 1 && cur_reel_depth < LIMIT_SWITCH_MIN){
+		if(reel_dir && reel_flag && cur_reel_depth < LIMIT_SWITCH_MIN){
 			cur_reel_depth = 0;
 			reel_dir = 0;
 			reel_flag = 0;
@@ -223,6 +214,7 @@ __interrupt void Port_1(void)
 		P1IFG &= ~BIT4;
 	}
 	if(P1IFG & BIT5){ //PWM In read
+
 
 		if (P1IN&BIT5){		//Positive Edge
 			if (TA0R>(0xFFFF-4000)){
@@ -246,9 +238,6 @@ __interrupt void Port_1(void)
 		}
 
 		P1IFG &= ~BIT5;
-
-
-
 
 	}
 }
@@ -283,10 +272,11 @@ __interrupt void Timer_A (void)
 {
 
 	lvl_compare++;
-	if(lvl_compare > LOW_PASS_LVL){
-		autoLevel();
+	if(lvl_compare > LOW_PASS){
+		getLevel();
 		lvl_compare = 0;
 	}
 
+	TA1CCTL0 &= ~CCIFG;
 
 }

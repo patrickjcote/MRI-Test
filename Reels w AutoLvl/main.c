@@ -11,42 +11,41 @@ int str2num(char *,int );
 int input_handler (char *, char *);
 void num2str(int ,char *,int );
 void all_stop_fun(void);
+unsigned char TXData[24],RXData[24];		//Buffers for the Slave of ths device
+volatile int TXData_ptr=0,RXData_ptr=0;		//Pointers and flags for the slave device
 
 volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG, reel_flag;
 volatile int status_code, interrupt_code, pu_flag, k;
-volatile unsigned int timeout_count1, timeout_count2, pwmread, pwmval;
-
-unsigned char TXData[64],RXData[64];		//Buffers for the Slave of ths device
-volatile int TXData_ptr=0,RXData_ptr=0;		//Pointers and flags for the slave device
-
-volatile unsigned int autolvl_flg = 0;
-volatile int set_angle, avg_angle[SAMPLES], lvl_compare = 0, avg_pointer;
+volatile unsigned int timeout_count1, timeout_count2, pwmread = 0, pwmval = 0;
+volatile int set_angle, avg_angle[SAMPLES], lvl_compare, autolevel_flag, avg_pointer;
 float current_angle, average;
 
 int main(void) {
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
+
 	volatile char identify[]="HReel";
 	volatile int n, ok2send=0;
+
 	__delay_cycles(50000);
 	i2c_slave_init(0x48);  //Set slave address to 0x48
+	__delay_cycles(50000);
 	i2c_init();
 	__delay_cycles(50000);
 	uart_init(4);   // set uart baud rate to 9600
-
+	__delay_cycles(50000);
 	BCSCTL1 = CALBC1_16MHZ;                    // Set Clock Speed
 	DCOCTL = CALDCO_16MHZ;
 	for (k=0;k<200;k++)
 		__delay_cycles(50000);
 
 
-	//Initialize I2c Master code
-
 	initReel();
 	__delay_cycles(50000);
 	init_ADXL();
 	__delay_cycles(50000);
-	k=0;
 
+	for (k=0;k<200;k++)
+			__delay_cycles(50000);
 
 	__bis_SR_register(GIE);
 	i2cTXData[0]=3;			//Dummy values first input to i2cTXData
@@ -85,13 +84,13 @@ int main(void) {
 
 		}
 
-		set_angle = 10;
-//		if (ALL_STOP_FLAG){
-//			TA0CCR1 = 0;
-//			TA0CCR2 = 0;
-//			TA1CCR1 = 0;
-//			TA1CCR2 = 0;
-//		}
+
+		if (ALL_STOP_FLAG){
+			TA0CCR1 = 0;
+			TA0CCR2 = 0;
+			TA1CCR1 = 0;
+			TA1CCR2 = 0;
+		}
 
 	}
 }
@@ -128,31 +127,31 @@ int input_handler (char *instring, char *outstring){
 		break;
 	case 'L':
 		if (instring[1]=='U'){
-			autolvl_flg = 1;
+			autolevel_flag = 1;
 			set_angle = REELING_ANGLE;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
 		if (instring[1]=='D'){
-			autolvl_flg = 1;
+			autolevel_flag = 1;
 			set_angle = -REELING_ANGLE;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
 		if (instring[1]=='L'){
-			autolvl_flg = 1;
+			autolevel_flag = 1;
 			set_angle = 0;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
 		if (instring[1]=='S'){
 			set_angle=str2num(instring+2,3);
-			autolvl_flg = 1;
+			autolevel_flag = 1;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
 		if (instring[1]=='A'){
-			autolvl_flg = 0;
+			autolevel_flag = 2;
 			ALL_STOP_FLAG=0;
 			retval = 0;
 		}
@@ -233,6 +232,7 @@ void all_stop_fun(void){
 	TA1CCR2 = 0;
 	reel_flag = 0;
 	reel_dir = 0;
+	autolevel_flag = 0;
 
 	status_code = 4;
 }
