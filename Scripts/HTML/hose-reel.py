@@ -43,6 +43,7 @@ class Reel:
     def pu(self):
         self.bus.write_i2c_block_data(self.address, 0 , map(ord,'PU'))
 
+    
     def s(self):
         self.bus.write_i2c_block_data(self.address, 0 , map(ord,'S'))
 
@@ -68,3 +69,6 @@ elif(cmd == "s"):
     x.s()
 elif(cmd == "pu"):
     x.pu()
+else:
+    x.write(cmd)
+

@@ -58,6 +58,16 @@ if($board == "all"){
             <input type="submit" value="Pull Up Reel" />
         </form>
         <form action="index.php" method="post">
+            <input type="radio" name="cmd" value="LU" />Up<br>
+            <input type="radio" name="cmd" value="LD" />Down<br>
+            <input type="radio" name="cmd" value="LL" />Level<br>
+            <input type="radio" name="cmd" value="LA" />Auto-level<br>
+            <input type="radio" name="cmd" value="LS" />Stop<br>
+            <input type="hidden" name="value" value="0" />
+            <input type="hidden" name="board" value="hose" />
+            <input type="submit" value="Set Reel Angle" />
+        </form>
+        <form action="index.php" method="post">
             <input type="hidden" name="cmd" value="v" />
             <input type="hidden" name="value" value="S" />
             <input type="hidden" name="board" value="valve" />
@@ -83,6 +93,7 @@ if($board == "all"){
                 <input type="hidden" name="board" value="valve" />
                 <input type="submit" value="Purge Time" />
         </form>
+        <div id="connection"><?php include('connection.php');?></div>
 </center>
 </body>
 
