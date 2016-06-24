@@ -83,6 +83,7 @@ if($board == "all"){
                 <input type="hidden" name="board" value="valve" />
                 <input type="submit" value="Purge Time" />
         </form>
+        <div id="connection"><?php include('connection.php');?></div>
 </center>
 </body>
 
