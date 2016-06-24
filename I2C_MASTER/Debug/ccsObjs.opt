@@ -1,1 +1,1 @@
-"./uart_control.obj" "./spi_bb.obj" "./main.obj" "./i2c.obj" -l"libc.a" "../lnk_msp430g2553.cmd" 
+"./i2c.obj" "./main.obj" "./spi_bb.obj" "./uart_control.obj" "../lnk_msp430g2553.cmd" -l"libc.a" 

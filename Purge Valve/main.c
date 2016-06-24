@@ -18,7 +18,7 @@ int main(void) {
 	volatile char identify[]="Valve";
 	volatile int n, k, ok2send=0;
 	__delay_cycles(50000);
-	i2c_slave_init(0x50);  //Set slave address to 0x48
+	i2c_slave_init(0x50);  //Set slave address to 0x50
 	uart_init(4);   // set uart baud rate to 9600
 
 	BCSCTL1 = CALBC1_16MHZ;                    // Set Clock Speed
@@ -211,7 +211,7 @@ __interrupt void Timer_A (void)
 		P2OUT ^= BIT5;
 		P2OUT |= BIT1;
 		purge_compare++;
-		if(purge_compare > 50){
+		if(purge_compare > 30){
 			purge_timer++;
 			purge_compare = 0;
 		}
