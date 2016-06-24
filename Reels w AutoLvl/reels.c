@@ -54,6 +54,7 @@ void initReel(){
 	set_angle = 0;
 	avg_pointer = 0;
 	autolevel_flag = 0;
+	get_level_flag = 0;
 	lvl_compare = 0;
 	ALL_STOP_FLAG = 1;
 
@@ -76,24 +77,20 @@ int goToClick(int setClick){
 	if(cur_reel_depth != setClick && (P1IN & BIT4)){
 		if(cur_reel_depth > setClick){
 			reel_dir = 1;
-			TA1CCR2 = MOTOR_MIN;
-			if(!autolevel_flag)
-				autolevel_flag = 1;
+			TA1CCR2 = MOTOR_DOWN;
 			return reel_dir;
 		}
 		if(cur_reel_depth < setClick){
 			reel_dir = 2;
-			TA1CCR2 = MOTOR_MAX;
-			if(!autolevel_flag)
-				autolevel_flag = 1;
+			TA1CCR2 = MOTOR_UP;
 			return reel_dir;
 		}
 	}
 	else{
 		reel_dir = 0;
 		reel_flag = 0;
-		if(!autolevel_flag)
-			autolevel_flag = 0;
+		autolevel_flag = 0;
+		TA1CCR1=PWM_NEU;
 		TA1CCR2 = PWM_NEU;
 		ALL_STOP_FLAG = 1;
 	}
@@ -119,11 +116,9 @@ void autoLevel(){
 
 	if(average > (set_angle + ANGLE_TOLERANCE)){
 		TA1CCR1=PWM_MIN;
-		ALL_STOP_FLAG = 0;
 	}
 	else if(average < (set_angle - ANGLE_TOLERANCE)){
 		TA1CCR1=PWM_MAX;
-		ALL_STOP_FLAG = 0;
 	}
 	else
 		TA1CCR1=PWM_NEU;
@@ -234,7 +229,14 @@ __interrupt void Port_1(void)
 			set_reel_depth= -10;
 			reel_flag = 1;
 			ALL_STOP_FLAG = 0;
-			interrupt_code = 4;
+			pu_flag = 1;
+		}
+		else if(pu_flag){
+			reel_flag = 0;
+			interrupt_code = 0;
+			set_reel_depth = cur_reel_depth;
+			ALL_STOP_FLAG = 1;
+			pu_flag = 0;
 		}
 
 		P1IFG &= ~BIT5;
@@ -271,11 +273,8 @@ __interrupt void Port_2(void)
 __interrupt void Timer_A (void)
 {
 
-	lvl_compare++;
-	if(lvl_compare > LOW_PASS){
-		getLevel();
-		lvl_compare = 0;
-	}
+
+	get_level_flag = 1;
 
 	TA1CCTL0 &= ~CCIFG;
 

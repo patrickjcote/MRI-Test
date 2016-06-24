@@ -5,8 +5,8 @@
  *      Author: BHill
  */
 #include  "msp430.h"
-#define uart_max 24
-#define i2c_max  24
+#define uart_max 12
+#define i2c_max  12
 
 unsigned char tx_data_str[uart_max], rx_data_str[uart_max], rx_flag=0, dec_str[6], eos_flag=0;
 char dec_char[6];

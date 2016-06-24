@@ -11,13 +11,14 @@ int str2num(char *,int );
 int input_handler (char *, char *);
 void num2str(int ,char *,int );
 void all_stop_fun(void);
-unsigned char TXData[24],RXData[24];		//Buffers for the Slave of ths device
+unsigned char TXData[12],RXData[12];		//Buffers for the Slave of ths device
 volatile int TXData_ptr=0,RXData_ptr=0;		//Pointers and flags for the slave device
 
-volatile int cur_reel_depth, reel_dir, set_reel_depth, ALL_STOP_FLAG, reel_flag;
-volatile int status_code, interrupt_code, pu_flag, k;
+volatile int cur_reel_depth, reel_dir, set_reel_depth, k ;
+volatile char status_code, interrupt_code, avg_pointer;
+volatile char pu_flag, ALL_STOP_FLAG, reel_flag, autolevel_flag, get_level_flag;
 volatile unsigned int timeout_count1, timeout_count2, pwmread = 0, pwmval = 0;
-volatile int set_angle, avg_angle[SAMPLES], lvl_compare, autolevel_flag, avg_pointer;
+volatile int set_angle, avg_angle[SAMPLES], lvl_compare;
 float current_angle, average;
 
 int main(void) {
@@ -45,7 +46,7 @@ int main(void) {
 	__delay_cycles(50000);
 
 	for (k=0;k<200;k++)
-			__delay_cycles(50000);
+		__delay_cycles(50000);
 
 	__bis_SR_register(GIE);
 	i2cTXData[0]=3;			//Dummy values first input to i2cTXData
@@ -81,15 +82,27 @@ int main(void) {
 			if(reel_flag){
 				status_code = goToClick(set_reel_depth);
 			}
-
+			if(autolevel_flag)
+				autoLevel();
 		}
 
+		if(get_level_flag){
+			lvl_compare++;
+			if(lvl_compare > LOW_PASS){
+				getLevel();
+				lvl_compare = 0;
+			}
+			get_level_flag =0;
+		}
 
 		if (ALL_STOP_FLAG){
 			TA0CCR1 = 0;
 			TA0CCR2 = 0;
 			TA1CCR1 = 0;
 			TA1CCR2 = 0;
+			reel_flag = 0;
+			reel_dir = 0;
+			autolevel_flag = 0;
 		}
 
 	}
@@ -105,6 +118,8 @@ int input_handler (char *instring, char *outstring){
 			timeout_count1 = 0;
 			timeout_count2 = 0;
 			interrupt_code = 0;
+			if(!autolevel_flag)
+				autolevel_flag = 2;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
@@ -121,7 +136,6 @@ int input_handler (char *instring, char *outstring){
 			reel_flag=1;
 			interrupt_code = 0;
 			retval=0;
-			pu_flag = 1;
 			ALL_STOP_FLAG=0;
 		}
 		break;
@@ -145,8 +159,8 @@ int input_handler (char *instring, char *outstring){
 			ALL_STOP_FLAG=0;
 		}
 		if (instring[1]=='S'){
-			set_angle=str2num(instring+2,3);
-			autolevel_flag = 1;
+			autolevel_flag = 0;
+			TA1CCR1=PWM_NEU;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}

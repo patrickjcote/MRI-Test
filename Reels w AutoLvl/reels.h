@@ -9,8 +9,8 @@
 #define REELS_H_
 
 #define TURNS_PER_WRAP 5
-#define REEL_TIMEOUT_1 50000
-#define REEL_TIMEOUT_2 10
+#define REEL_TIMEOUT_1 30000
+#define REEL_TIMEOUT_2 5
 #define MAX_CLICKS 999	//Upper bound of allowable clicks
 #define MIN_CLICKS -5	//Lower bound of allowable clicks
 #define LIMIT_SWITCH_MIN 5		//Max # of clicks w/o Limit Switch error code
@@ -26,16 +26,17 @@
 #define REELING_ANGLE 10
 #define LOW_PASS 10
 
-#define MOTOR_MAX 3200		// PWM high limit
-#define MOTOR_MIN 2800		// PWM low limit
+#define MOTOR_UP 3210		// PWM high limit
+#define MOTOR_DOWN 2900		// PWM low limit
 
 
 extern unsigned char TXData[],RXData[];		//Buffers for the Slave of ths device
 extern volatile int TXData_ptr,RXData_ptr;		//Pointers and flags for the slave device
-extern volatile int status_code, interrupt_code, ALL_STOP_FLAG;
-extern volatile int cur_reel_depth, reel_dir, set_reel_depth, reel_flag, pu_flag, autolevel_flag, k;
+extern volatile int cur_reel_depth, reel_dir, set_reel_depth, k;
 extern volatile unsigned int timeout_count1, timeout_count2, pwmread, pwmval;
-extern volatile int avg_angle[], set_angle, lvl_compare, avg_pointer;
+extern volatile int avg_angle[], set_angle, lvl_compare;
+extern volatile char status_code, interrupt_code, avg_pointer;
+extern volatile char pu_flag, ALL_STOP_FLAG, reel_flag, autolevel_flag, get_level_flag;
 extern float current_angle, average;
 
 
