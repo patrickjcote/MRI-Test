@@ -24,7 +24,7 @@ void initReel(){
 	P2IES |= BIT0;				// P2.0 Hi/lo edge
 	P2REN |= BIT0;				// Enable Pull Up (P2.0)
 	P2IFG &= ~BIT0;				// P2.0 IFG clear
-	//PWM Init
+	//PWM Out Init
 	TA1CCR0 = 40000;
 	TA1CCR1 = 0;
 	TA1CCR2 = 0;
@@ -32,15 +32,15 @@ void initReel(){
 	TA1CCTL2 = OUTMOD_7;
 	TA1CTL = TASSEL_2 + MC_1 + ID_3;
 	//PWM Outputs
-	P2DIR |= BIT2 + BIT4;				//Motor Control P2.4 | Actuator P2.2
+	P2DIR |= BIT2 + BIT4;		// Motor Control P2.4 | Actuator P2.2
 	P2SEL |= BIT2 + BIT4;
 	//PWM IN
 	pwmread=TA0R;
 	CCR0 = 50000;
 	TACTL = TASSEL_2 + MC_2+ID_3;
-	P1IE |= BIT5;                             // P2.0 interrupt enabled
-	P1IES &= ~BIT5;                            // P2.0 Hi/lo edge
-	P1IFG &= ~BIT5;                           // P2.0 IFG cleared
+	P1IE |= BIT5;				// P2.0 interrupt enabled
+	P1IES &= ~BIT5;				// P2.0 Hi/lo edge
+	P1IFG &= ~BIT5;				// P2.0 IFG cleared
 	//Level Timer Interrupt
 	TA1CCTL0 = CCIE;
 	//Init Globals
@@ -69,7 +69,7 @@ int goToClick(int setClick){
 		timeout_count1 = 0;
 		timeout_count2++;
 	}
-	if(timeout_count2 > REEL_TIMEOUT_2){
+	if(timeout_count2 > REEL_TIMEOUT){
 		ALL_STOP_FLAG = 1;
 		return 3;
 	}
@@ -106,7 +106,7 @@ int goToClick(int setClick){
 void autoLevel(){
 	volatile int currentWrap;
 
-	currentWrap = (cur_reel_depth / TURNS_PER_WRAP)+2;
+	currentWrap = (cur_reel_depth / TURNS_PER_WRAP)+1+TOP_WRAP_ANGLE;
 	if(autolevel_flag == 2){
 		if(currentWrap % 2)
 			set_angle = +REELING_ANGLE;
@@ -144,9 +144,7 @@ void getLevel(){
 		avg_pointer = 0;
 	}
 
-
 	avg_angle[avg_pointer] = (int)(current_angle*100);
-
 	avg_pointer++;
 	sum = 0;
 
@@ -207,9 +205,8 @@ __interrupt void Port_1(void)
 
 		ALL_STOP_FLAG = 1;
 		P1IFG &= ~BIT4;
-	}
+	}//if limit switch
 	if(P1IFG & BIT5){ //PWM In read
-
 
 		if (P1IN&BIT5){		//Positive Edge
 			if (TA0R>(0xFFFF-4000)){
@@ -225,9 +222,10 @@ __interrupt void Port_1(void)
 			P1IES &=~ BIT5;
 		}
 
-		if(pwmval > PWM_NEU){
+		if(pwmval < PWM_NEU){
 			set_reel_depth= -10;
 			reel_flag = 1;
+			reel_dir = 1;
 			ALL_STOP_FLAG = 0;
 			pu_flag = 1;
 		}
@@ -240,8 +238,7 @@ __interrupt void Port_1(void)
 		}
 
 		P1IFG &= ~BIT5;
-
-	}
+	}//if PWM In read
 }
 
 // Port 2 ISR
@@ -262,10 +259,11 @@ __interrupt void Port_2(void)
 	if(cur_reel_depth < MIN_CLICKS)
 		cur_reel_depth = 0;
 
+	//Click hit, reset timeout counter
 	timeout_count1 = 0;
 	timeout_count2 = 0;
 
-	P2IFG &= ~BIT0;
+	P2IFG &= ~BIT0;			// Clear interrupt
 
 }
 
