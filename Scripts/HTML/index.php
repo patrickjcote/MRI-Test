@@ -13,6 +13,12 @@ $(document).ready(function(){
 
 </script>
 
+<style>
+
+padding:10px;
+
+</style>
+
 </head>
 
 <?php
@@ -37,7 +43,6 @@ if($board == "all"){
 
 <body>
 <center>
-
         <h1><underline>Hose and Pump Control</underline></h1>
        <form action="index.php" method="post">
             <input type="hidden" name="cmd" value="s" />
@@ -45,18 +50,11 @@ if($board == "all"){
             <input type="hidden" name="board" value="all" />
             <input type="submit" value="EMERGENCY STOP" class="button"/>
         </form>
-        <br><br>
-        <div id="status">
+<br><br>
+        <div id="status" style="float:left">
         <?php include('status.php');?>
         </div>
-        <br>
-        <br>
-        <form action="index.php" method="post">
-            <input type="hidden" name="cmd" value="pu" />
-            <input type="hidden" name="value" value="0" />
-            <input type="hidden" name="board" value="hose" />
-            <input type="submit" value="Pull Up Reel" />
-        </form>
+        <div id="reel-control" style="float:left">
         <form action="index.php" method="post">
             <input type="radio" name="cmd" value="LU" />Up<br>
             <input type="radio" name="cmd" value="LD" />Down<br>
@@ -68,17 +66,33 @@ if($board == "all"){
             <input type="submit" value="Set Reel Angle" />
         </form>
         <form action="index.php" method="post">
+            <input type="hidden" name="cmd" value="pu" />
+            <input type="hidden" name="value" value="0" />
+            <input type="hidden" name="board" value="hose" />
+            <input type="submit" value="Pull Up Reel" />
+        </form>
+        </div>
+        <br><br>
+        <div id="valve-control" style="float:left">
+        <form action="index.php" method="post">
             <input type="hidden" name="cmd" value="v" />
             <input type="hidden" name="value" value="S" />
             <input type="hidden" name="board" value="valve" />
-            <input type="submit" value="Valve to Sample" />
+            <input type="submit" value="Valve to Sample Position" />
         </form>
         <form action="index.php" method="post">
             <input type="hidden" name="cmd" value="v" />
             <input type="hidden" name="value" value="P" />
             <input type="hidden" name="board" value="valve" />
-            <input type="submit" value="Valve Purge"/>
+            <input type="submit" value="Valve to Purge Position"/>
         </form>
+        <form action="index.php" method="post">
+                Purge Time: <input type="text" name="value" value="<?php if($board == "valve")echo $value;?>"/>
+                <input type="hidden" name="cmd" value="p" />
+                <input type="hidden" name="board" value="valve" />
+                <input type="submit" value="Purge Time" />
+        </form>
+</div>
 <br><br>        
 <form action="index.php" method="post">
         Set Depth: <input type="text" name="value" value="<?php if($board == "hose") echo $value;?>"/>
@@ -87,14 +101,8 @@ if($board == "all"){
                 <input type="submit" value="Set Depth" />
         </form>
         <br><br>
-        <form action="index.php" method="post">
-                Purge Time: <input type="text" name="value" value="<?php if($board == "valve")echo $value;?>"/>
-                <input type="hidden" name="cmd" value="p" />
-                <input type="hidden" name="board" value="valve" />
-                <input type="submit" value="Purge Time" />
-        </form>
         <div id="connection"><?php include('connection.php');?></div>
-</center>
+</center>        
 </body>
 
 </html>

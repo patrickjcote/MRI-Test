@@ -1,5 +1,8 @@
 <?php
 
+
+$set_angle = shell_exec("sudo python hose-reel.py LQS 0 &");
+$current_angle = shell_exec("sudo python hose-reel.py LQA 0 &");
 $current_depth = shell_exec("sudo python hose-reel.py cd 0 &");
 $current_status = shell_exec("sudo python hose-reel.py q 0 &");
 $current_pump = shell_exec("sudo python valve.py t 0 &");
@@ -31,9 +34,9 @@ default:
 }
 
 if($current_valve[2] == "1")
-        $valve = "Sampler Line";
+        $valve = "Ready to Sample";
 else
-        $valve = "Purge Line";
+        $valve = "Ready to Purge";
 
 $time_m = intval(floor(intval($current_pump)/60));
 $time_s = intval($current_pump) % 60;
@@ -41,5 +44,7 @@ $time_s = intval($current_pump) % 60;
 ?>
         Current Depth: <?php echo $current_depth;?><br>
         Reel Status: <?php echo $status;?><br>
+        Reel Current Angle: <?php echo $current_angle;?><br>
+        Reel Set Angle: <?php echo $set_angle;?><br>
         Pump Time Remaining: <?php echo sprintf("%02d:%02d", $time_m, $time_s);?><br>
         Valve Status: <?php echo $valve;?><br>

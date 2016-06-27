@@ -69,6 +69,14 @@ elif(cmd == "s"):
     x.s()
 elif(cmd == "pu"):
     x.pu()
+elif(cmd == "LQS"):
+    x.write(cmd)
+    time.sleep(.01)
+    x.read()
+elif(cmd == "LQA"):
+    x.write(cmd)
+    time.sleep(.01)
+    x.read()
 else:
     x.write(cmd)
 
