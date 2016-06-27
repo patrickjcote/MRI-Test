@@ -10,7 +10,7 @@
 
 #define TURNS_PER_WRAP 45
 #define REEL_TIMEOUT_1 50000
-#define REEL_TIMEOUT_2 10
+#define REEL_TIMEOUT 10
 #define MAX_CLICKS 999	//Upper bound of allowable clicks
 #define MIN_CLICKS -5	//Lower bound of allowable clicks
 #define LIMIT_SWITCH_MIN 5		//Max # of clicks w/o Limit Switch error code

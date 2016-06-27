@@ -60,7 +60,7 @@ int goToClick(int setClick){
 		timeout_count1 = 0;
 		timeout_count2++;
 	}
-	if(timeout_count2 > REEL_TIMEOUT_2){
+	if(timeout_count2 > REEL_TIMEOUT){
 		ALL_STOP_FLAG = 1;
 		return 3;
 	}
