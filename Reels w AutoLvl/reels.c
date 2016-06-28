@@ -228,6 +228,9 @@ __interrupt void Port_1(void)
 			reel_dir = 1;
 			ALL_STOP_FLAG = 0;
 			pu_flag = 1;
+
+			timeout_count1 = 0;
+			timeout_count2 = 0;
 		}
 		else if(pu_flag){
 			reel_flag = 0;
