@@ -158,6 +158,12 @@ int input_handler (char *instring, char *outstring){
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
+		if (instring[1]=='T'){
+			autolevel_flag = 1;
+			set_angle = -20;
+			retval=0;
+			ALL_STOP_FLAG=0;
+		}
 		if (instring[1]=='S'){
 			autolevel_flag = 0;
 			TA1CCR1=PWM_NEU;
