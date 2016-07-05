@@ -51,10 +51,10 @@ if($board == "all"){
             <input type="submit" value="EMERGENCY STOP" class="button"/>
         </form>
 <br><br>
-        <div id="status" style="float:left">
+        <div id="status" >
         <?php include('status.php');?>
         </div>
-        <div id="reel-control" style="float:left">
+        <div id="reel-control"> 
         <form action="index.php" method="post">
             <input type="radio" name="cmd" value="LU" />Up<br>
             <input type="radio" name="cmd" value="LD" />Down<br>
@@ -72,8 +72,7 @@ if($board == "all"){
             <input type="submit" value="Pull Up Reel" />
         </form>
         </div>
-        <br><br>
-        <div id="valve-control" style="float:left">
+        <div id="valve-control">
         <form action="index.php" method="post">
             <input type="hidden" name="cmd" value="v" />
             <input type="hidden" name="value" value="S" />
