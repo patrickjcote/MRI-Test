@@ -2,12 +2,21 @@ import serial
 import sys
 
 fileName = sys.argv[1]
+
+#set read flag to "Reading"
+f=open('r.flag','w')
+f.write('R')
+f.close()
+
+#clear current data file
+f=open('current.txt','w')
+f.write('')
+f.close()
+
 port = serial.Serial("/dev/ttyUSB0", baudrate=1200, timeout=3.0)
-print "This is a test"
 while True:
     f=open('current.txt','a+')
-    f2=open(fileName,'a+')
-    print "Read_port"
+    f2=open("logs/"+fileName,'a+')
     rcv = port.read(100)
     f.write(rcv)
     f2.write(rcv)

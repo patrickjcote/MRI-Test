@@ -1,6 +1,6 @@
 graphics_toolkit('gnuplot');
-data_in=dlmread('current.txt');
-data_in=data_in(2:end-1,:);
+f=dlmread('current.txt');
+f=f(find(f(:,9)),:)
 figure('visible','off');
-plot(data_in(:,9),data_in(:,1));
-print -djpg currentgraph.jpg
+plot(f(:,9),f(:,1));
+print("currentgraph.jpg","-djpg")

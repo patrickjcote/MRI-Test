@@ -101,6 +101,8 @@ if($board == "all"){
         </form>
         <br><br>
         <div id="connection"><?php include('connection.php');?></div>
+
+        <a href="/data/" target="_blank">View Data Sonde Page</a>
 </center>        
 </body>
 
