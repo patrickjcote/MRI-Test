@@ -14,21 +14,19 @@ void all_stop_fun(void);
 unsigned char TXData[12],RXData[12];		//Buffers for the Slave of ths device
 volatile int TXData_ptr=0,RXData_ptr=0;		//Pointers and flags for the slave device
 
-volatile int cur_reel_depth, reel_dir, set_reel_depth, k ;
-volatile char status_code, interrupt_code, avg_pointer;
-volatile char pu_flag, ALL_STOP_FLAG, reel_flag, autolevel_flag, get_level_flag;
+volatile int cur_reel_depth, reel_dir, set_reel_depth, k;
+volatile char status_code, interrupt_code;
+volatile char pu_flag, ALL_STOP_FLAG, reel_flag;
 volatile unsigned int timeout_count1, timeout_count2, pwmread = 0, pwmval = 0;
-volatile int set_angle, avg_angle[SAMPLES], lvl_compare;
-float current_angle, average;
 
 int main(void) {
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
 
-	volatile char identify[]="HReel";
+	volatile char identify[]="DReel";
 	volatile int n, ok2send=0;
 
 	__delay_cycles(50000);
-	i2c_slave_init(0x48);  //Set slave address to 0x48
+	i2c_slave_init(0x49);  //Set slave address to 0x48
 	__delay_cycles(50000);
 	i2c_init();
 	__delay_cycles(50000);
@@ -41,8 +39,6 @@ int main(void) {
 
 
 	initReel();
-	__delay_cycles(50000);
-	init_ADXL();
 	__delay_cycles(50000);
 
 	for (k=0;k<200;k++)
@@ -82,17 +78,6 @@ int main(void) {
 			if(reel_flag){
 				status_code = goToClick(set_reel_depth);
 			}
-			if(autolevel_flag)
-				autoLevel();
-		}
-
-		if(get_level_flag){
-			lvl_compare++;
-			if(lvl_compare > LOW_PASS){
-				getLevel();
-				lvl_compare = 0;
-			}
-			get_level_flag =0;
 		}
 
 		if (ALL_STOP_FLAG){
@@ -102,7 +87,6 @@ int main(void) {
 			TA1CCR2 = 0;
 			reel_flag = 0;
 			reel_dir = 0;
-			autolevel_flag = 0;
 		}
 
 	}
@@ -118,8 +102,6 @@ int input_handler (char *instring, char *outstring){
 			timeout_count1 = 0;
 			timeout_count2 = 0;
 			interrupt_code = 0;
-			if(!autolevel_flag)
-				autolevel_flag = 2;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
@@ -137,53 +119,6 @@ int input_handler (char *instring, char *outstring){
 			interrupt_code = 0;
 			retval=0;
 			ALL_STOP_FLAG=0;
-		}
-		break;
-	case 'L':
-		if (instring[1]=='U'){
-			autolevel_flag = 1;
-			set_angle = REELING_ANGLE;
-			retval=0;
-			ALL_STOP_FLAG=0;
-		}
-		if (instring[1]=='D'){
-			autolevel_flag = 1;
-			set_angle = -REELING_ANGLE;
-			retval=0;
-			ALL_STOP_FLAG=0;
-		}
-		if (instring[1]=='L'){
-			autolevel_flag = 1;
-			set_angle = 0;
-			retval=0;
-			ALL_STOP_FLAG=0;
-		}
-		if (instring[1]=='T'){
-			autolevel_flag = 1;
-			set_angle = -20;
-			retval=0;
-			ALL_STOP_FLAG=0;
-		}
-		if (instring[1]=='S'){
-			autolevel_flag = 0;
-			TA1CCR1=PWM_NEU;
-			retval=0;
-			ALL_STOP_FLAG=0;
-		}
-		if (instring[1]=='A'){
-			autolevel_flag = 2;
-			ALL_STOP_FLAG=0;
-			retval = 0;
-		}
-		if (instring[1]=='Q'){
-			if (instring[2]=='A'){
-				num2str((int)average,outstring,3);
-				retval=3;
-			}
-			if (instring[2]=='S'){
-				num2str(set_angle,outstring,3);
-				retval=3;
-			}
 		}
 		break;
 	case 'S':
@@ -252,7 +187,6 @@ void all_stop_fun(void){
 	TA1CCR2 = 0;
 	reel_flag = 0;
 	reel_dir = 0;
-	autolevel_flag = 0;
 
 	status_code = 4;
 }
