@@ -1,8 +1,6 @@
 <?php
 
 
-$set_angle = shell_exec("sudo python hose-reel.py LQS 0 &");
-$current_angle = shell_exec("sudo python hose-reel.py LQA 0 &");
 $current_depth = shell_exec("sudo python hose-reel.py cd 0 &");
 $current_status = shell_exec("sudo python hose-reel.py q 0 &");
 
@@ -32,6 +30,6 @@ default:
 }
 
 ?>
-        <strong> Reel Depth</strong><br><br>
+        <strong> Reel Control</strong><br>
         Reel Status: <?php echo $status;?><br>
         Current Depth: <?php echo $current_depth;?><br>

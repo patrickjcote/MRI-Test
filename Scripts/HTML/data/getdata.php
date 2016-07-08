@@ -16,6 +16,9 @@ if($cmd == "clear"){
 }
 ?>
 <style>
+body{
+    font-size:150%;
+}
 form{
     display:inline-block;
 }
@@ -40,9 +43,6 @@ a{
         <input type="hidden" name="cmd" value="clear">
         <input type="submit" value="Clear current data">
 </form>
-</div>
-<div style="clear:both">
-<a href="logs/" target="_blank">View Logs</a>
 </div>
 </center>
 </html>

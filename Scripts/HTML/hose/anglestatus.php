@@ -32,6 +32,6 @@ default:
 }
 
 ?>
-        <strong> Reel Depth</strong><br><br>
-        Reel Status: <?php echo $status;?><br>
-        Current Depth: <?php echo $current_depth;?><br>
+        <strong> Reel Angle</strong><br><br>
+        Reel Current Angle: <?php echo $current_angle;?><br>
+        Reel Set Angle: <?php echo $set_angle;?>

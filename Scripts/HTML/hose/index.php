@@ -1,7 +1,7 @@
 <html>
 
 <head>
-<title>MRI - Pit Boat Control</title>
+<title>MRI - Hose/Valve/Pump Control</title>
 <script src="jquery.js"></script>
 <link rel="stylesheet" type="text/css" href="style.css" />
 <script>
@@ -9,14 +9,23 @@ $(document).ready(function(){
         setInterval(function() {
                 $("#reelstatus").load("reelstatus.php");
                 $("#pumpstatus").load("pumpstatus.php");
+                $("#anglestatus").load("anglestatus.php");
         }, 1000);
 });
 
 </script>
 
 <style>
+body{
+    font-size:150%;
+}
+
 div{
     padding-bottom:20px;
+}
+.radioLeft {
+    text-align:left;
+    display:inline-block;
 }
 #pumpcontrol{
     float:left;
@@ -98,13 +107,17 @@ if($board == "all"){
         </div>
     </div>
     <div id="anglecontrol">
-        <strong>Reel Angle Control</strong>
+        <div id="anglestatus">
+        <?php include('anglestatus.php');?>
+        </div>
         <form action="index.php" method="post">
+            <div class="radioLeft">
             <input type="radio" name="cmd" value="LU" />Up<br>
             <input type="radio" name="cmd" value="LD" />Down<br>
             <input type="radio" name="cmd" value="LL" />Level<br>
             <input type="radio" name="cmd" value="LA" />Auto-level<br>
             <input type="radio" name="cmd" value="LS" />Stop<br>
+            </div><br>
             <input type="hidden" name="value" value="0" />
             <input type="hidden" name="board" value="hose" />
             <input type="submit" value="Set Reel Angle" />
@@ -129,7 +142,7 @@ if($board == "all"){
             </form>
             <form action="index.php" method="post">
                 Purge Time: <input type="text" name="value"\
-                 <?php if($valveFlag) {echo 'disabled value="Switch Valve to Purge"';}?>/>
+                 <?php if($valveFlag) {echo 'disabled value="Check Valve Status"';}?>/>
                 <input type="hidden" name="cmd" value="p" />
                 <input type="hidden" name="board" value="valve" />
                 <input type="submit" value="Purge"<?php if($valveFlag) {echo 'disabled';}?> />

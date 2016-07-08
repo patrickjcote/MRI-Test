@@ -20,6 +20,6 @@ $time_m = intval(floor(intval($current_pump)/60));
 $time_s = intval($current_pump) % 60;
 
 ?>
-        <strong>Pump/Valve Control</strong><br>
+        <strong>Pump/Valve Control</strong><br><br>
         Pump Time Remaining: <?php echo sprintf("%02d:%02d", $time_m, $time_s);?><br>
         Valve Status: <?php echo $valve;?><br>
