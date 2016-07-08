@@ -1,9 +1,22 @@
 <?php
-exec("sudo octave parse_ds_file.m &");
+exec("sudo octave depth.m &");
 ?>
 
-Read Flag: <?php include("r.flag");?><br>
-<img src="currentgraph.jpg?src=<?php echo rand();?> " width="50%">
-<br>Raw Data:<br>
+Current Data Updated: 
+<?php
+if(file_exists("current.txt")){
+        echo date("m/d/Y - H:i:s",filemtime("current.txt"));
+}
+else{
+        echo "No Current Data";
+}
+?>
+
+<br>
+<img src="currentdepth.jpg?src=<?php echo rand();?> " width="50%">
+<br><br>
+<?php
+if(file_exists("current.txt")){?>
 <a href="current.txt" target="_blank">View current raw data</a><br>
-Time Temp pH Sal ORP LDO% Battery BP_mmHg
+<?php } ?>
+Read Flag: <?php include("r.flag");?><br>

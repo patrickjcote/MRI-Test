@@ -12,17 +12,25 @@ else{
 }
 if($cmd == "clear"){
         exec("sudo rm -f current.txt");
-        exec("sudo rm -f currentgraph.jpg");
+        exec("sudo rm -f currentdepth.jpg");
 }
 ?>
-
+<style>
+form{
+    display:inline-block;
+}
+a{
+    clear:both;
+}
+</style>
+</head>
 
 <body>
 <center>
-<?php echo $date;?>
-        <form action="getdata.php" method="post">
+<div style="clear:both">
+<form action="getdata.php" method="post">
         <input type="hidden" name="cmd" value="getdata">
-        <input type="submit" value="Start recording data">
+        <input type="submit" value="Start recording data (<?php echo $date;?>)">
 </form>
         <form action="getdata.php" method="post">
         <input type="hidden" name="cmd" value="stopdata">
@@ -32,6 +40,9 @@ if($cmd == "clear"){
         <input type="hidden" name="cmd" value="clear">
         <input type="submit" value="Clear current data">
 </form>
+</div>
+<div style="clear:both">
 <a href="logs/" target="_blank">View Logs</a>
+</div>
 </center>
 </html>

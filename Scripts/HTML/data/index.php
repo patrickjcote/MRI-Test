@@ -15,12 +15,12 @@ $(document).ready(function(){
 
 <body>
 <center>
-<iframe src="getdata.php" frameborder="0" scrolling="no"></iframe><br>
+        <h1>Data Sonde Control</h1>
         <div id="graph" >
-        <?php exec("sudo octave parse_ds_file.m");?>
-        <img src="currentgraph.jpg" width="50%">
-        
+<?php include("graph.php");?> 
         </div>
+
+<iframe src="getdata.php" frameborder="0" scrolling="no"></iframe><br>
 </body>
 
 </html>
