@@ -12,7 +12,7 @@
 
 #define MOTOR_UP 3500		// PWM high limit
 #define MOTOR_DOWN 2500		// PWM low limit
-#define TURNS_PER_WRAP 45	// (Width of reel)/(Hose OD)
+#define TURNS_PER_WRAP 28	// (Width of reel)/(Wire OD)
 #define REEL_TIMEOUT 6		// Seconds
 
 // -----------------------------------------------------
@@ -22,8 +22,6 @@
 #define MAX_CLICKS 999		//Upper bound of allowable clicks
 #define MIN_CLICKS -5		//Lower bound of allowable clicks
 #define LIMIT_SWITCH_MIN 5	//Max # of clicks w/o Limit Switch error codes
-#define PWM_MAX	4000		// PWM high limit
-#define PWM_MIN  2000		// PWM low limit
 #define PWM_NEU  3000		// PWM Neutral limit
 
 
@@ -33,8 +31,6 @@ extern volatile int cur_reel_depth, reel_dir, set_reel_depth, k;
 extern volatile unsigned int timeout_count1, timeout_count2, pwmread, pwmval;
 extern volatile char status_code, interrupt_code;
 extern volatile char pu_flag, ALL_STOP_FLAG, reel_flag;
-
-
 
 
 void initReel();
