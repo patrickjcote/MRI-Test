@@ -5,25 +5,28 @@ import RPi.GPIO as GPIO
 
 # Use BCM GPIO references
 # instead of physical pin numbers
-GPIO.cleanup()
 GPIO.setmode(GPIO.BCM)
 
+# Limit Switch Input
+GPIO.setup(26,GPIO.IN)
+
+# Define GPIO signals to use
 enablePin = 16
 direction = 20
 step = 21
-
-# Define GPIO signals to use
 StepPins = [enablePin,direction,step]
 
 for pin in StepPins:
     GPIO.setup(pin,GPIO.OUT)
     GPIO.output(pin, False)
-    print str(pin) + " Enabled"
 
+# Define Times
 waitTime = .000010
-pulseDown = .000450
+pulseDown = .000550
 pulseUp = .000005
-StepCounter = 0
+
+stepCount = 0
+stepDir = -1
 
 GPIO.output(step,False)
 GPIO.output(enablePin,True)
@@ -31,19 +34,55 @@ time.sleep(waitTime)
 GPIO.output(direction,True)
 time.sleep(waitTime)
 
-# Start main loop
 while True:
+    GPIO.output(step, True)
+    time.sleep(pulseUp)  
+    GPIO.output(step, False)
+    time.sleep(pulseDown)
+    
+    if GPIO.input(26)==0:
+        stepCount=0
+        GPIO.output(direction,False)
+        break
 
-    print StepCounter
+time.sleep(1)
+
+stepDir = 1
+count = 0
+while count < 1000:
 
     GPIO.output(step, True)
     time.sleep(pulseUp)  
     GPIO.output(step, False)
-
-    StepCounter += 1
-
     time.sleep(pulseDown)
+    count += 1
+    
+while True:
+    GPIO.output(step, True)
+    time.sleep(pulseUp)  
+    GPIO.output(step, False)
+    time.sleep(pulseDown)
+    
+    stepCount += stepDir
 
-    if StepCounter == 5000:
+    if stepCount > 10000:
+        GPIO.output(enablePin,False)
+        time.sleep(waitTime)
+        GPIO.output(enablePin,True)
+        time.sleep(waitTime)
+        GPIO.output(direction,True)
+        stepDir = -1
+
+    if stepCount < 0:
+        GPIO.output(enablePin,False)
+        time.sleep(waitTime)
+        GPIO.output(enablePin,True)
+        time.sleep(waitTime)
+        GPIO.output(direction,False)
+        stepDir = 1
+    
+    if GPIO.input(26)==0:
+        stepCount=0
+        GPIO.output(direction,False)
         GPIO.output(enablePin,False)
         break
