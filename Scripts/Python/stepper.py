@@ -3,22 +3,19 @@ import sys
 import time
 import RPi.GPIO as GPIO
 
-# Use BCM GPIO references
-# instead of physical pin numbers
-GPIO.setmode(GPIO.BCM)
 
-# Limit Switch Input
-GPIO.setup(26,GPIO.IN)
-
-# Define GPIO signals to use
+# Define pins
 enablePin = 16
 direction = 20
 step = 21
-StepPins = [enablePin,direction,step]
+limit = 26
 
-for pin in StepPins:
-    GPIO.setup(pin,GPIO.OUT)
-    GPIO.output(pin, False)
+# GPIO Init
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(enablePin,GPIO.OUT)
+GPIO.setup(direction,GPIO.OUT)
+GPIO.setup(step,GPIO.OUT)
+GPIO.setup(limit,GPIO.IN)
 
 # Define Times
 waitTime = .000010
@@ -40,7 +37,7 @@ while True:
     GPIO.output(step, False)
     time.sleep(pulseDown)
     
-    if GPIO.input(26)==0:
+    if GPIO.input(limit)==0:
         stepCount=0
         GPIO.output(direction,False)
         break
@@ -81,8 +78,9 @@ while True:
         GPIO.output(direction,False)
         stepDir = 1
     
-    if GPIO.input(26)==0:
+    if GPIO.input(limit)==0:
         stepCount=0
         GPIO.output(direction,False)
         GPIO.output(enablePin,False)
         break
+GPIO.cleanup()
