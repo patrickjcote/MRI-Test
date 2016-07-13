@@ -11,6 +11,7 @@ step = 21
 limit = 26
 
 # GPIO Init
+GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(enablePin,GPIO.OUT)
 GPIO.setup(direction,GPIO.OUT)
@@ -19,7 +20,7 @@ GPIO.setup(limit,GPIO.IN)
 
 # Define Times
 waitTime = .000010
-pulseDown = .000550
+pulseDown = .000570
 pulseUp = .000005
 
 stepCount = 0
@@ -83,4 +84,3 @@ while True:
         GPIO.output(direction,False)
         GPIO.output(enablePin,False)
         break
-GPIO.cleanup()
