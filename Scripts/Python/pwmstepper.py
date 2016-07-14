@@ -6,9 +6,9 @@ import pigpio
 
 
 # Define pins
-enablePin = 16
-direction = 20
-stepPin = 12
+enablePin = 5
+direction = 6
+stepPin = 13
 limit = 26
 
 step = pigpio.pi()
