@@ -7,7 +7,7 @@ function connected($instring){
                 echo "<font color='red'>No Connection</font>";
         }
 }
-$data_reel = shell_exec("sudo python data-reel.py i 0 &");
+$data_reel_connection = shell_exec("sudo python data-reel.py i 0 &");
 ?>
 <?php
 if(file_exists("current.txt")){?>
@@ -18,5 +18,5 @@ if(file_exists("current.txt")){?>
 </div>
 Read Flag: <?php include("r.flag");?><br>
     <div>
-        Data Reel: <?php connected($data_reel); ?><br>
+        Data Reel: <?php connected($data_reel_connection); ?><br>
     </div>

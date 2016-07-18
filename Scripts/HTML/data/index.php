@@ -12,6 +12,9 @@ $(document).ready(function(){
         setInterval(function() {
                 $("#graph").load("graph.php");
         }, 10500);
+        setInterval(function() {
+                $("#connection").load("connection.php");
+        }, 2400);
 });
 
 </script>
@@ -27,8 +30,7 @@ img{
     display:block;
     margin: 0px;
 }
-#footer``:w
-#{
+#footer{
     clear:both;
 }
 #connection{
@@ -47,7 +49,13 @@ $current_status = shell_exec("sudo python data-reel.py q 0 &");
 if($board == "data"){
         $hose_output = shell_exec("sudo python data-reel.py $cmd $value &");
 }
+if($board == "all"){
+        $hose_output = shell_exec("sudo python data-reel.py $cmd $value &");
+        $hose_output = shell_exec("sudo python ../hose/hose-reel.py $cmd $value &");
+        $valve_output = shell_exec("sudo python ../hose/valve.py $cmd $value &");
+}
 ?>
+
 
 
 <body>

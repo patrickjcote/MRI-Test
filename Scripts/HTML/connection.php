@@ -7,8 +7,9 @@ function connected($instring){
                 echo "<font color='red'>No Connection</font>";
         }
 }
-$hose_reel = shell_exec("sudo python hose-reel.py i 0 &");
-$pump = shell_exec("sudo python valve.py i 0 &");
+$data_reel = shell_exec("sudo python data/data-reel.py i 0 &");
+$hose_reel = shell_exec("sudo python hose/hose-reel.py i 0 &");
+$pump = shell_exec("sudo python hose/valve.py i 0 &");
 ?>
     <div style="float:left">
         Hose Reel: <?php connected($hose_reel); ?><br>

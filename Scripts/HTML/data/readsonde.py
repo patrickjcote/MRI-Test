@@ -27,8 +27,5 @@ while True:
     f3.close()
     if s[0] == 'X':
         break
-f=open('r.flag','w')
-f.write('O')
-f.close()
 print 'Exit'
 

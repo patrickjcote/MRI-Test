@@ -1,35 +1,35 @@
 <?php
 
 
-$current_depth = shell_exec("sudo python hose-reel.py cd 0 &");
-$current_status = shell_exec("sudo python hose-reel.py q 0 &");
+$dreel_depth = shell_exec("sudo python data-reel.py cd 0 &");
+$dreel_status = shell_exec("sudo python data-reel.py q 0 &");
 
-switch($current_status){
+switch($dreel_status){
 case 100:
-        $status = "Ready";
+        $dreel_status = "Ready";
         break;
 case 001:
-        $status = "Reeling Up";
+        $dreel_status = "Reeling Up";
         break;
 case 002:
-        $status = "Reeling Down";
+        $dreel_status = "Reeling Down";
         break;
 case 104:
-        $status = "Emergency Stop";
+        $dreel_status = "Emergency Stop";
         break;
 case 110:
 case 120:
 case 115:
 case 125:
-        $status = "Limit Switch Engaged   (".$current_status.")";
+        $dreel_status = "Limit Switch Engaged   (".$dreel_status.")";
         break;
 
 default:
-        $status = "Error ".$current_status;
+        $dreel_status = "Error ".$dreel_status;
         break;
 }
 
 ?>
         <strong> Reel Control</strong><br>
-        Reel Status: <?php echo $status;?><br>
-        Current Depth: <?php echo $current_depth;?><br>
+        Reel Status: <?php echo $dreel_status;?><br>
+        Current Depth: <?php echo $dreel_depth;?><br>

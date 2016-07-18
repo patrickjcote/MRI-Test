@@ -8,9 +8,16 @@
 $(document).ready(function(){
         setInterval(function() {
                 $("#reelstatus").load("reelstatus.php");
+        }, 1111);
+        setInterval(function() {
                 $("#pumpstatus").load("pumpstatus.php");
+        }, 1222);
+        setInterval(function() {
                 $("#anglestatus").load("anglestatus.php");
-        }, 1000);
+        }, 1333);
+        setInterval(function() {
+                $("#connection").load("connection.php");
+        }, 1555);
 });
 
 </script>
@@ -65,12 +72,16 @@ $current_valve = shell_exec("sudo python valve.py q 0 &");
 if($board == "hose"){
         $hose_output = shell_exec("sudo python hose-reel.py $cmd $value &");
 }
+if($board == "prime"){
+        $prime_output = shell_exec("sudo python prime.py $cmd $value &");
+}
 if($board == "valve"){
         $valve_output = shell_exec("sudo python valve.py $cmd $value &");
 }
 if($board == "all"){
         $hose_output = shell_exec("sudo python hose-reel.py $cmd $value &");
         $valve_output = shell_exec("sudo python valve.py $cmd $value &");
+        $prime_output = shell_exec("sudo python prime.py $cmd $value &");
 }
 ?>
 
@@ -116,6 +127,7 @@ if($board == "all"){
             <input type="radio" name="cmd" value="LD" />Down<br>
             <input type="radio" name="cmd" value="LL" />Level<br>
             <input type="radio" name="cmd" value="LA" />Auto-level<br>
+            <input type="radio" name="cmd" value="LT" />Travel Mode<br>
             <input type="radio" name="cmd" value="LS" />Stop<br>
             </div><br>
             <input type="hidden" name="value" value="0" />
@@ -146,6 +158,12 @@ if($board == "all"){
                 <input type="hidden" name="cmd" value="p" />
                 <input type="hidden" name="board" value="valve" />
                 <input type="submit" value="Purge"<?php if($valveFlag) {echo 'disabled';}?> />
+            </form>
+            <form action="index.php" method="post">
+                Prime Time: <input type="text" name="value" />
+                <input type="hidden" name="cmd" value="p" />
+                <input type="hidden" name="board" value="prime" />
+                <input type="submit" value="Prime" />
             </form>
         </div>
     </div>
