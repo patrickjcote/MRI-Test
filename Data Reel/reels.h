@@ -13,12 +13,12 @@
 #define MOTOR_UP 3500		// PWM high limit
 #define MOTOR_DOWN 2500		// PWM low limit
 #define TURNS_PER_WRAP 28	// (Width of reel)/(Wire OD)
-#define REEL_TIMEOUT 6		// Seconds
+#define REEL_TIMEOUT 8		// Seconds
 
 // -----------------------------------------------------
 
 
-#define REEL_TIMEOUT_1 30000
+#define REEL_TIMEOUT_1 50000
 #define MAX_CLICKS 999		//Upper bound of allowable clicks
 #define MIN_CLICKS -5		//Lower bound of allowable clicks
 #define LIMIT_SWITCH_MIN 5	//Max # of clicks w/o Limit Switch error codes
