@@ -106,6 +106,7 @@ int goToClick(int setClick){
 void autoLevel(){
 	volatile int currentWrap;
 
+	// Calculate current wrap level to determine angle
 	currentWrap = (cur_reel_depth / TURNS_PER_WRAP)+1+TOP_WRAP_ANGLE;
 	if(autolevel_flag == 2){
 		if(currentWrap % 2)
