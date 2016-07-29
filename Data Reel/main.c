@@ -16,7 +16,7 @@ volatile int TXData_ptr=0,RXData_ptr=0;		//Pointers and flags for the slave devi
 
 volatile int cur_reel_depth, reel_dir, set_reel_depth, k;
 volatile char status_code, interrupt_code;
-volatile char pu_flag, ALL_STOP_FLAG, reel_flag;
+volatile char pwm_pullup_flag, ALL_STOP_FLAG, reel_flag;
 volatile unsigned int timeout_count1, timeout_count2, pwmread = 0, pwmval = 0;
 
 int main(void) {

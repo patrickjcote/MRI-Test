@@ -25,7 +25,7 @@ void initReel(){
 	P2REN |= BIT0;				// Enable Pull Up (P2.0)
 	P2IFG &= ~BIT0;				// P2.0 IFG clear
 	//PWM Out Init
-	TA1CCR0 = 40000;
+	TA1CCR0 = 40000;			// PWM period
 	TA1CCR1 = 0;
 	TA1CCR2 = 0;
 	TA1CCTL1 = OUTMOD_7;
@@ -48,7 +48,7 @@ void initReel(){
 	set_reel_depth = 0;
 	reel_dir = 0;
 	reel_flag = 0;
-	pu_flag = 0;
+	pwm_pullup_flag = 0;
 	status_code = 0;
 	interrupt_code = 0;
 	set_angle = 0;
@@ -195,7 +195,7 @@ __interrupt void Port_1(void)
 			reel_flag = 0;
 			status_code = 0;
 			interrupt_code = 1;  //Limit switch hit
-			if(pu_flag)
+			if(pwm_pullup_flag)
 				interrupt_code = 0;
 		}
 		else{
@@ -206,8 +206,9 @@ __interrupt void Port_1(void)
 		ALL_STOP_FLAG = 1;
 		P1IFG &= ~BIT4;
 	}//if limit switch
-	if(P1IFG & BIT5){ //PWM In read
-
+	if(P1IFG & BIT5){
+	//PWM In read - pull up reels if signal drops below neutral
+		//Read PWM edges
 		if (P1IN&BIT5){		//Positive Edge
 			if (TA0R>(0xFFFF-4000)){
 				pwmread-=TA0R;
@@ -221,22 +222,22 @@ __interrupt void Port_1(void)
 
 			P1IES &=~ BIT5;
 		}
-
+		//Compare pwm signal to neutral
 		if(pwmval < PWM_NEU){
 			set_reel_depth= -10;
 			reel_flag = 1;
 			reel_dir = 1;
 			ALL_STOP_FLAG = 0;
-			pu_flag = 1;
+			pwm_pullup_flag = 1;
 			timeout_count1 = 0;
 			timeout_count2 = 0;
 		}
-		else if(pu_flag){
+		else if(pwm_pullup_flag){
 			reel_flag = 0;
 			interrupt_code = 0;
 			set_reel_depth = cur_reel_depth;
 			ALL_STOP_FLAG = 1;
-			pu_flag = 0;
+			pwm_pullup_flag = 0;
 		}
 
 		P1IFG &= ~BIT5;

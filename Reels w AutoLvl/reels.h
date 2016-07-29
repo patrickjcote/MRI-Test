@@ -40,7 +40,7 @@ extern volatile int cur_reel_depth, reel_dir, set_reel_depth, k;
 extern volatile unsigned int timeout_count1, timeout_count2, pwmread, pwmval;
 extern volatile int avg_angle[], set_angle, lvl_compare;
 extern volatile char status_code, interrupt_code, avg_pointer;
-extern volatile char pu_flag, ALL_STOP_FLAG, reel_flag, autolevel_flag, get_level_flag;
+extern volatile char pwm_pullup_flag, ALL_STOP_FLAG, reel_flag, autolevel_flag, get_level_flag;
 extern float current_angle, average;
 
 

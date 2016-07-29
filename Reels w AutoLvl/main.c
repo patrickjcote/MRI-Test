@@ -16,7 +16,7 @@ volatile int TXData_ptr=0,RXData_ptr=0;		//Pointers and flags for the slave devi
 
 volatile int cur_reel_depth, reel_dir, set_reel_depth, k ;
 volatile char status_code, interrupt_code, avg_pointer;
-volatile char pu_flag, ALL_STOP_FLAG, reel_flag, autolevel_flag, get_level_flag;
+volatile char pwm_pullup_flag, ALL_STOP_FLAG, reel_flag, autolevel_flag, get_level_flag;
 volatile unsigned int timeout_count1, timeout_count2, pwmread = 0, pwmval = 0;
 volatile int set_angle, avg_angle[SAMPLES], lvl_compare;
 float current_angle, average;
@@ -86,6 +86,7 @@ int main(void) {
 				autoLevel();
 		}
 
+		// Level the reel regardless of auto stop
 		if(get_level_flag){
 			lvl_compare++;
 			if(lvl_compare > LOW_PASS){
@@ -125,7 +126,7 @@ int input_handler (char *instring, char *outstring){
 		}
 		break;
 	case 'C':
-		if (instring[1]=='D'){				// Set values for the depth of clicks the reel will go to
+		if (instring[1]=='D'){				// Get clicks
 			num2str(cur_reel_depth,outstring,3);
 			retval=3;
 		}
@@ -143,48 +144,48 @@ int input_handler (char *instring, char *outstring){
 			ALL_STOP_FLAG=0;
 		}
 		break;
-	case 'L':
-		if (instring[1]=='U'){
+	case 'L':	// Set Reel Level
+		if (instring[1]=='U'){	// Up position
 			autolevel_flag = 1;
 			set_angle = REELING_ANGLE;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
-		if (instring[1]=='D'){
+		if (instring[1]=='D'){ // Down position
 			autolevel_flag = 1;
 			set_angle = -REELING_ANGLE;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
-		if (instring[1]=='L'){
+		if (instring[1]=='L'){ // Level the reel
 			autolevel_flag = 1;
 			set_angle = 0;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
-		if (instring[1]=='T'){
+		if (instring[1]=='T'){ // Travel mode, send the reel all the way down
 			autolevel_flag = 1;
 			set_angle = -20;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
-		if (instring[1]=='S'){
+		if (instring[1]=='S'){	// Stop all leveling
 			autolevel_flag = 0;
 			TA1CCR1=PWM_NEU;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
-		if (instring[1]=='A'){
+		if (instring[1]=='A'){	// Auto level -> set level based on clicks
 			autolevel_flag = 2;
 			ALL_STOP_FLAG=0;
 			retval = 0;
 		}
-		if (instring[1]=='Q'){
-			if (instring[2]=='A'){
+		if (instring[1]=='Q'){	// Query
+			if (instring[2]=='A'){	// Get average angle of reel
 				num2str((int)average,outstring,3);
 				retval=3;
 			}
-			if (instring[2]=='S'){
+			if (instring[2]=='S'){	// Get level the reel is set to
 				num2str(set_angle,outstring,3);
 				retval=3;
 			}
@@ -195,18 +196,18 @@ int input_handler (char *instring, char *outstring){
 		all_stop_fun();
 		retval=0;
 		break;
-	case 'I':
+	case 'I':	// Comms check
 		outstring[0]= 'O';
 		outstring[1]= 'k';
 		retval=2;
 		break;
-	case 'Q':
+	case 'Q':	// Query status
 		outstring[0]=(0x30+ALL_STOP_FLAG);
 		outstring[1]=(0x30+interrupt_code);
 		outstring[2]=(0x30+status_code);
 		retval=3;
 		break;
-	default:
+	default:	// Invalid command, repeat back the command
 		outstring[0]= instring[0];
 		outstring[1]= instring[1];
 		outstring[2]= instring[2];
