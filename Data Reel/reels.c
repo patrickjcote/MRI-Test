@@ -25,14 +25,14 @@ void initReel(){
 	P2REN |= BIT0;				// Enable Pull Up (P2.0)
 	P2IFG &= ~BIT0;				// P2.0 IFG clear
 	//PWM Out Init
-	TA1CCR0 = 40000;
+	TA1CCR0 = 40000;			// PWM Period
 	TA1CCR1 = 0;
 	TA1CCR2 = 0;
 	TA1CCTL1 = OUTMOD_7;
 	TA1CCTL2 = OUTMOD_7;
 	TA1CTL = TASSEL_2 + MC_1 + ID_3;
 	//PWM Outputs
-	P2DIR |= BIT4;		// Motor Control P2.4 | Actuator P2.2
+	P2DIR |= BIT4;		// Motor Control P2.4
 	P2SEL |= BIT4;
 	//PWM IN
 	pwmread=TA0R;
@@ -57,6 +57,7 @@ void initReel(){
 
 int goToClick(int setClick){
 
+	//clicks timeout check
 	timeout_count1++;
 	if(timeout_count1 > REEL_TIMEOUT_1){
 		timeout_count1 = 0;
@@ -64,9 +65,10 @@ int goToClick(int setClick){
 	}
 	if(timeout_count2 > REEL_TIMEOUT){
 		ALL_STOP_FLAG = 1;
-		return 3;
+		return 3;		//Clicks missed, return timeout status
 	}
 
+	//determine reel direction
 	if(cur_reel_depth != setClick && (P1IN & BIT4)){
 		if(cur_reel_depth > setClick){
 			reel_dir = 1;
@@ -101,8 +103,9 @@ int goToClick(int setClick){
 __interrupt void Port_1(void)
 {
 	if(P1IFG & BIT4){
-		//Hardware interrupt for limit switch
-		if(reel_dir && reel_flag && cur_reel_depth < LIMIT_SWITCH_MIN){
+		// Hardware interrupt for limit switch
+		// Check if reeling up and if current depth is close enough to 0
+		if(reel_dir == 2 && reel_flag && cur_reel_depth < LIMIT_SWITCH_MIN){
 			cur_reel_depth = 0;
 			reel_dir = 0;
 			reel_flag = 0;
@@ -119,7 +122,9 @@ __interrupt void Port_1(void)
 		ALL_STOP_FLAG = 1;
 		P1IFG &= ~BIT4;
 	}//if limit switch
-	if(P1IFG & BIT5){ //PWM In read
+
+	if(P1IFG & BIT5){
+	//PWM In read - pull up reels if signal drops below neutral
 
 		if (P1IN&BIT5){		//Positive Edge
 			if (TA0R>(0xFFFF-4000)){

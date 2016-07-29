@@ -107,7 +107,7 @@ int input_handler (char *instring, char *outstring){
 		}
 		break;
 	case 'C':
-		if (instring[1]=='D'){				// Set values for the depth of clicks the reel will go to
+		if (instring[1]=='D'){				// Get clicks depth of reel
 			num2str(cur_reel_depth,outstring,3);
 			retval=3;
 		}
@@ -121,17 +121,17 @@ int input_handler (char *instring, char *outstring){
 			ALL_STOP_FLAG=0;
 		}
 		break;
-	case 'S':
+	case 'S':		//All Stop
 		ALL_STOP_FLAG=1;
 		all_stop_fun();
 		retval=0;
 		break;
-	case 'I':
+	case 'I':		//Comms check for web interface
 		outstring[0]= 'O';
 		outstring[1]= 'k';
 		retval=2;
 		break;
-	case 'Q':
+	case 'Q':		//Query status
 		outstring[0]=(0x30+ALL_STOP_FLAG);
 		outstring[1]=(0x30+interrupt_code);
 		outstring[2]=(0x30+status_code);
