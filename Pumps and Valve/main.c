@@ -103,29 +103,29 @@ int main(void) {
 int input_handler (char *instring, char *outstring){
 	int retval=0;
 	switch (instring[0]){
-	case 'P':
-		if(!(P2OUT&BIT0)){
+	case 'P':	// Set Purge Time
+		if(!(P2OUT&BIT0)){	//If the valve is in the right position
 			purge_flag = 1;
 			set_purge_time = str2num(instring+1,3);
 			ALL_STOP_FLAG=0;
 			num2str(1,outstring,3);
 			retval=3;
 		}
-		else{
+		else{				// Else return vlv for valve error
 			outstring[0] = 'V';
 			outstring[1] = 'l';
 			outstring[2] = 'V';
 			retval=3;
 		}
 		break;
-	case 'V':
-		if(instring[1] == 'S')
+	case 'V':	//Change valve Position
+		if(instring[1] == 'S')	// Towards Sampler
 			P2OUT |= BIT0;
-		if(instring[1] == 'P')
+		if(instring[1] == 'P')	// Towards Pump
 			P2OUT &= ~BIT0;
 		retval = 0;
 		break;
-	case 'Q':
+	case 'Q':			// Query status
 		if(P2OUT & BIT1)
 			outstring[0] = '1';
 		else
@@ -137,16 +137,16 @@ int input_handler (char *instring, char *outstring){
 		outstring[1]= 'x';
 		retval=3;
 		break;
-	case 'T':
+	case 'T':		// Return pump time left
 		num2str((set_purge_time - purge_timer),outstring,3);
 		retval=3;
 		break;
-	case 'I':
+	case 'I':		// Comms check
 		outstring[0]= 'O';
 		outstring[1]= 'k';
 		retval=2;
 		break;
-	case 'S':
+	case 'S':		// All Stop
 		ALL_STOP_FLAG=1;
 		purge_flag=0;
 		retval = 0;
@@ -207,11 +207,13 @@ void all_stop_fun(void){
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void Timer_A (void)
 {
+	//Purge Timer
 	if(purge_flag){
-		P2OUT ^= BIT5;
-		P2OUT |= BIT1;
+		P2OUT ^= BIT5; // Flash status LED
+		P2OUT |= BIT1; // Pump on
 		purge_compare++;
 		if(purge_compare > 30){
+		// (purge_compare == 30) == 1 second
 			purge_timer++;
 			purge_compare = 0;
 		}
