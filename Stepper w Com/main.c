@@ -18,7 +18,7 @@ int main(void) {
 	volatile char identify[]="STEP";
 	volatile int n, k, ok2send=0;
 	__delay_cycles(50000);
-	i2c_slave_init(0x4A);  //Set slave address to 0x4A
+	i2c_slave_init(0x53);  //Set slave address to 0x53
 	uart_init(4);   // set uart baud rate to 9600
 
 	BCSCTL1 = CALBC1_16MHZ;                    // Set Clock Speed
@@ -54,7 +54,7 @@ int main(void) {
 		}
 		if (i2crxflag){					// if data received as the I2C slave
 			__delay_cycles(50000);
-			ok2send=input_handler(i2cRXData,i2cTXData);
+			ok2send=input_handler(i2cRXData+1,i2cTXData);
 			i2crxflag=0;
 
 		}
@@ -78,17 +78,12 @@ int input_handler (char *instring, char *outstring){
 		retval=0;
 		break;
 	case 'P':			// Get current Position
-		num2str((stepper_pos/10),outstring,3);
+		num2str((stepper_pos/STEPS_PER_CLICK),outstring,3);
 		retval=3;
 		break;
 	case 'H':			// Find Home Position
 		findHome();
 		retval=0;
-		break;
-	case 'I':		// Comms check
-		outstring[0]= 'O';
-		outstring[1]= 'k';
-		retval=2;
 		break;
 	default:
 		outstring[0]= instring[0];
