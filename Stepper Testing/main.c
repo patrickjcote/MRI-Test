@@ -10,8 +10,9 @@
 #define MAX_STEPS 13000
 #define MIN_STEPS 10
 
-void switchDirection();
-volatile int stepper_pos, stepper_dir, stepper_en, raster_dir, initialized;
+void setDirection();
+void findHome(void);
+volatile int stepper_pos, stepper_dir, stepper_en, raster_dir;
 
 int main(void) {
 
@@ -35,33 +36,26 @@ int main(void) {
 
 	// Stepper Limit Switch
 	P2DIR &= ~BIT1;				// Limit switch input on 2.1
-	P2IE |=  BIT1;				// 2.1 interrupt enabled
-	P2IES |= BIT1;				// 2.1 Hi/lo edge
 	P2REN |= BIT1;				// Enable Pull Up (P1.4)
-	P2IFG &= ~BIT1;				// P2.1 IFG clear
 
 	stepper_pos = 0;
 	stepper_dir = STEP_BACKWARD;
 	stepper_en = 1;
-	initialized = 0;
 
 	__delay_cycles(50000);
 	__bis_SR_register(GIE);
 
-	while(!initialized) { }		// Wait for raster to zero position
-
+	findHome();
 
 	while(1){
 		stepper_en = 1;
 		if(raster_dir){
-			stepper_dir = STEP_FORWARD;
-			switchDirection(STEP_FORWARD);
+			setDirection(STEP_FORWARD);
 			if(stepper_pos > MAX_STEPS)
 				raster_dir = RASTER_BACKWARD;
 		}
 		else{
-			stepper_dir = STEP_BACKWARD;
-			switchDirection(STEP_BACKWARD);
+			setDirection(STEP_BACKWARD);
 			if(stepper_pos < MIN_STEPS)
 				raster_dir = RASTER_FORWARD;
 		}
@@ -71,10 +65,12 @@ int main(void) {
 
 }
 
-void switchDirection(int direction){
+void setDirection(int direction){
 
 	volatile int n;
 	P2SEL &= ~BIT1;			//Disable steps
+
+	stepper_dir = direction;
 
 	if(direction == STEP_FORWARD)
 		P1OUT &= ~BIT3;		// Set Direction
@@ -84,24 +80,23 @@ void switchDirection(int direction){
 	for(n=0;n<100;n++);		// ~5us delay
 	P2SEL |= BIT1;			// Enable steps
 
+}// setDirection()
 
-}
-
-// Port 2 ISR
-#pragma vector=PORT2_VECTOR
-__interrupt void Port_2(void)
+void findHome(void)
 {
+	setDirection(STEP_BACKWARD);
 
-	if(P2IFG & BIT1){
-		stepper_pos = 0;
-		stepper_dir = STEP_FORWARD;
-		stepper_en = 0;
-		raster_dir = RASTER_FORWARD;
-		P2IFG &= ~BIT1;
-		initialized = 1;
+	while(P2IN & BIT1)
+	{
+		stepper_dir = STEP_BACKWARD;
 	}
 
-}
+	stepper_pos = 0;
+	setDirection(STEP_FORWARD);
+	stepper_en = 0;
+	raster_dir = RASTER_FORWARD;
+
+}// findHome()
 
 // Timer A0 interrupt service routine
 #pragma vector=TIMER1_A0_VECTOR
@@ -114,7 +109,7 @@ __interrupt void Timer_A (void)
 		P1OUT &= ~BIT4;		// Disable Motor
 
 
-	if(initialized && stepper_en){
+	if(stepper_en){
 		stepper_pos += stepper_dir;	// Inc/Dec stepper position
 	}
 }
