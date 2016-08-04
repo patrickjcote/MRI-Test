@@ -96,6 +96,27 @@ int goToClick(int setClick){
 
 }//goToClick()
 
+void writeStepper(char firstByte, char secondByte){
+	char i2cbuf[12];
+	i2cbuf[0] = STEPPER_ADDR;
+	i2cbuf[1] = firstByte;
+	i2cbuf[2] = secondByte;
+	i2c_rx_bb(i2cbuf,3,0);
+}
+
+void readStepper(char, read_byte, int *stepper_return){
+	char i2cbuf[12];
+	i2cbuf[0]=STEPPER_ADDR;
+	i2cbuf[1]= read_byte;
+	i2c_rx_bb(i2cbuf,2,0);
+	i2cbuf[0]=(STEPPER_ADDR+1);
+
+	i2c_rx_bb(i2cbuf,1,6);
+	stepper_return[0]=(i2cbuf[1]+((i2cbuf[2]<<8)));
+	stepper_return[1]=(i2cbuf[3]+((i2cbuf[4]<<8)));
+	stepper_return[2]=(i2cbuf[5]+((i2cbuf[6]<<8)));
+}
+
 
 // --------------------------------  Interrupts ----------------------
 // Port 1 ISR
