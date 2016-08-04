@@ -3,8 +3,8 @@
 /*
  * main.c
  */
-#define STEP_FORWARD 1
-#define STEP_BACKWARD -1
+#define FORWARD 1
+#define BACKWARD -1
 #define RASTER_FORWARD 1
 #define RASTER_BACKWARD 0
 #define MAX_STEPS 13000
@@ -39,7 +39,7 @@ int main(void) {
 	P1REN |= BIT5;				// Enable Pull Up (P1.4)
 
 	stepper_pos = 0;
-	stepper_dir = STEP_BACKWARD;
+	stepper_dir = BACKWARD;
 	stepper_en = 1;
 
 	__delay_cycles(50000);
@@ -50,12 +50,12 @@ int main(void) {
 	while(1){
 		stepper_en = 1;
 		if(raster_dir){
-			setDirection(STEP_FORWARD);
+			setDirection(FORWARD);
 			if(stepper_pos > MAX_STEPS)
 				raster_dir = RASTER_BACKWARD;
 		}
 		else{
-			setDirection(STEP_BACKWARD);
+			setDirection(BACKWARD);
 			if(stepper_pos < MIN_STEPS)
 				raster_dir = RASTER_FORWARD;
 		}
@@ -70,9 +70,9 @@ void setDirection(int direction){
 	volatile int n;
 	stepper_dir = direction;
 
-	if(direction == STEP_FORWARD)
+	if(direction == FORWARD)
 		P1OUT &= ~BIT3;		// Set Direction
-	if(direction == STEP_BACKWARD)
+	if(direction == BACKWARD)
 		P1OUT |= BIT3;		// Set Direction
 
 	for(n=0;n<100;n++);		// ~5us delay
@@ -82,15 +82,15 @@ void setDirection(int direction){
 
 int findHome(void)
 {
-	setDirection(STEP_BACKWARD);
+	setDirection(BACKWARD);
 
 	while(P1IN & BIT5)
 	{
-		stepper_dir = STEP_BACKWARD;
+		stepper_dir = BACKWARD;
 	}
 
 	stepper_pos = 0;
-	setDirection(STEP_FORWARD);
+	setDirection(FORWARD);
 	stepper_en = 0;
 	raster_dir = RASTER_FORWARD;
 	return 1;
