@@ -119,9 +119,6 @@ int input_handler (char *instring, char *outstring){
 		}
 		break;
 	case 'T':
-		stepper_flag = 1;
-		writeStepper('S','F');
-		__delay_cycles(20000);
 		readStepper(outstring, 'P');
 		retval = 3;
 		break;
@@ -129,6 +126,14 @@ int input_handler (char *instring, char *outstring){
 			stepper_flag = 1;
 			writeStepper('H', '0');
 			break;
+	case 'F':
+				stepper_flag = 1;
+				writeStepper('S', 'F');
+				break;
+	case 'B':
+				stepper_flag = 1;
+				writeStepper('S', 'B');
+				break;
 	case 'C':
 		if (instring[1]=='D'){				// Get clicks depth of reel
 			num2str(cur_reel_depth,outstring,3);

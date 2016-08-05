@@ -115,6 +115,8 @@ void readStepper(char *stepper_return, char commandByte){
 	i2cbuf[2]= commandByte;
 	i2c_rx_bb(i2cbuf,3,0);
 
+	__delay_cycles(50000);
+
 	i2cbuf[0]=(STEPPER_ADDR+1);
 	i2c_rx_bb(i2cbuf,1,3);
 	stepper_return[0]=i2cbuf[1];
