@@ -144,6 +144,8 @@ int input_handler (char *instring, char *outstring){
 		if (instring[1]=='U'){				// Pull Up Reel
 			set_reel_depth=-6;
 			reel_flag=1;
+			timeout_count1 = 0;
+			timeout_count2 = 0;
 			interrupt_code = 0;
 			retval=0;
 			ALL_STOP_FLAG=0;
