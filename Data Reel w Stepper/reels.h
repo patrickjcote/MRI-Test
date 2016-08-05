@@ -14,7 +14,7 @@
 #define MOTOR_DOWN 2500		// PWM low limit
 #define TURNS_PER_WRAP 30	// (Width of reel)/(Wire OD)
 #define REEL_TIMEOUT 8		// Seconds
-#define STEPPER_ADDR 0x53	// I2C Address of stepper board
+#define STEPPER_ADDR 0xA6	// I2C Address of stepper board
 
 
 

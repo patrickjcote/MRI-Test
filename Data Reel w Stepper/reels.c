@@ -102,16 +102,18 @@ int goToClick(int setClick){
 void writeStepper(char firstByte, char secondByte){
 	char i2cbuf[12];
 	i2cbuf[0] = STEPPER_ADDR;
-	i2cbuf[1] = firstByte;
-	i2cbuf[2] = secondByte;
-	i2c_rx_bb(i2cbuf,3,0);
+	i2cbuf[1]= ' ';
+	i2cbuf[2] = firstByte;
+	i2cbuf[3] = secondByte;
+	i2c_rx_bb(i2cbuf,4,0);
 }
 
 void readStepper(char *stepper_return, char commandByte){
 	char i2cbuf[12];
 	i2cbuf[0]=STEPPER_ADDR;
-	i2cbuf[1]= commandByte;
-	i2c_rx_bb(i2cbuf,2,0);
+	i2cbuf[1]= ' ';
+	i2cbuf[2]= commandByte;
+	i2c_rx_bb(i2cbuf,3,0);
 
 	i2cbuf[0]=(STEPPER_ADDR+1);
 	i2c_rx_bb(i2cbuf,1,3);

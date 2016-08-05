@@ -124,7 +124,6 @@ int input_handler (char *instring, char *outstring){
 		__delay_cycles(20000);
 		readStepper(outstring, 'P');
 		retval = 3;
-
 		break;
 	case 'H':
 			stepper_flag = 1;
