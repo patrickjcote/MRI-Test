@@ -12,13 +12,13 @@
 
 #define MOTOR_UP 3500		// PWM high limit
 #define MOTOR_DOWN 2500		// PWM low limit
-#define TURNS_PER_WRAP 28	// (Width of reel)/(Wire OD)
+#define TURNS_PER_WRAP 30	// (Width of reel)/(Wire OD)
 #define REEL_TIMEOUT 8		// Seconds
-#define STEPPER_ADDR 0x4A	// I2C Address of stepper board
+#define STEPPER_ADDR 0x53	// I2C Address of stepper board
+
+
 
 // -----------------------------------------------------
-
-
 #define REEL_TIMEOUT_1 50000
 #define MAX_CLICKS 999		//Upper bound of allowable clicks
 #define MIN_CLICKS -5		//Lower bound of allowable clicks
@@ -28,10 +28,10 @@
 
 extern unsigned char TXData[],RXData[];		//Buffers for the Slave of ths device
 extern volatile int TXData_ptr,RXData_ptr;		//Pointers and flags for the slave device
-extern volatile int cur_reel_depth, reel_dir, set_reel_depth, k;
+extern volatile int cur_reel_depth, reel_dir, set_reel_depth, raster_dir, turns, k;
 extern volatile unsigned int timeout_count1, timeout_count2, pwmread, pwmval;
-extern volatile char status_code, interrupt_code;
-extern volatile char pwm_pullup_flag, ALL_STOP_FLAG, reel_flag;
+extern volatile char status_code, interrupt_code, step_return[];
+extern volatile char pwm_pullup_flag, ALL_STOP_FLAG, reel_flag, stepper_flag;
 
 
 void initReel();

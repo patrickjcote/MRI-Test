@@ -14,9 +14,9 @@ void all_stop_fun(void);
 unsigned char TXData[12],RXData[12];		//Buffers for the Slave of ths device
 volatile int TXData_ptr=0,RXData_ptr=0;		//Pointers and flags for the slave device
 
-volatile int cur_reel_depth, reel_dir, set_reel_depth, k;
-volatile char status_code, interrupt_code;
-volatile char pwm_pullup_flag, ALL_STOP_FLAG, reel_flag;
+volatile int cur_reel_depth, reel_dir, set_reel_depth, raster_dir, turns, k;
+volatile char status_code, interrupt_code, step_return[3];
+volatile char pwm_pullup_flag, ALL_STOP_FLAG, reel_flag, stepper_flag;
 volatile unsigned int timeout_count1, timeout_count2, pwmread = 0, pwmval = 0;
 
 int main(void) {
@@ -78,6 +78,18 @@ int main(void) {
 			if(reel_flag){
 				status_code = goToClick(set_reel_depth);
 			}
+			if(stepper_flag){
+				if(turns > TURNS_PER_WRAP)
+					raster_dir = -1;
+				if(turns < 1)
+					raster_dir = 1;
+
+				if(turns < TURNS_PER_WRAP && raster_dir == 1)
+					writeStepper('S','F');
+				else
+					writeStepper('S','B');
+				stepper_flag = 0;
+			}
 		}
 
 		if (ALL_STOP_FLAG){
@@ -106,6 +118,18 @@ int input_handler (char *instring, char *outstring){
 			ALL_STOP_FLAG=0;
 		}
 		break;
+	case 'T':
+		stepper_flag = 1;
+		writeStepper('S','F');
+		__delay_cycles(20000);
+		readStepper(outstring, 'P');
+		retval = 3;
+
+		break;
+	case 'H':
+			stepper_flag = 1;
+			writeStepper('H', '0');
+			break;
 	case 'C':
 		if (instring[1]=='D'){				// Get clicks depth of reel
 			num2str(cur_reel_depth,outstring,3);

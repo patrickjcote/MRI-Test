@@ -46,6 +46,9 @@ void initReel(){
 	set_reel_depth = 0;
 	reel_dir = 0;
 	reel_flag = 0;
+	raster_dir = 1;
+	stepper_flag = 0;
+	turns = 0;
 	pwm_pullup_flag = 0;
 	status_code = 0;
 	interrupt_code = 0;
@@ -104,17 +107,17 @@ void writeStepper(char firstByte, char secondByte){
 	i2c_rx_bb(i2cbuf,3,0);
 }
 
-void readStepper(char, read_byte, int *stepper_return){
+void readStepper(char *stepper_return, char commandByte){
 	char i2cbuf[12];
 	i2cbuf[0]=STEPPER_ADDR;
-	i2cbuf[1]= read_byte;
+	i2cbuf[1]= commandByte;
 	i2c_rx_bb(i2cbuf,2,0);
-	i2cbuf[0]=(STEPPER_ADDR+1);
 
-	i2c_rx_bb(i2cbuf,1,6);
-	stepper_return[0]=(i2cbuf[1]+((i2cbuf[2]<<8)));
-	stepper_return[1]=(i2cbuf[3]+((i2cbuf[4]<<8)));
-	stepper_return[2]=(i2cbuf[5]+((i2cbuf[6]<<8)));
+	i2cbuf[0]=(STEPPER_ADDR+1);
+	i2c_rx_bb(i2cbuf,1,3);
+	stepper_return[0]=i2cbuf[1];
+	stepper_return[1]=i2cbuf[2];
+	stepper_return[2]=i2cbuf[3];
 }
 
 
@@ -189,10 +192,15 @@ __interrupt void Port_2(void)
 {
 
 	//Hardware interrupt for click counter
-	if(reel_dir == 2 && reel_flag)
+	if(reel_dir == 2 && reel_flag){
 		cur_reel_depth++;
-	if(reel_dir == 1 && reel_flag)
+		stepper_flag = 0;
+	}
+	if(reel_dir == 1 && reel_flag){
 		cur_reel_depth--;
+		stepper_flag = 1;
+		turns += raster_dir;
+	}
 	if(cur_reel_depth > MAX_CLICKS){
 		ALL_STOP_FLAG = 1;
 		reel_flag = 0;
