@@ -99,6 +99,7 @@ int main(void) {
 			TA1CCR2 = 0;
 			reel_flag = 0;
 			reel_dir = 0;
+			stepper_flag = 0;
 		}
 
 	}
@@ -118,22 +119,6 @@ int input_handler (char *instring, char *outstring){
 			ALL_STOP_FLAG=0;
 		}
 		break;
-	case 'T':
-		readStepper(outstring, 'P');
-		retval = 3;
-		break;
-	case 'H':
-			stepper_flag = 1;
-			writeStepper('H', '0');
-			break;
-	case 'F':
-				stepper_flag = 1;
-				writeStepper('S', 'F');
-				break;
-	case 'B':
-				stepper_flag = 1;
-				writeStepper('S', 'B');
-				break;
 	case 'C':
 		if (instring[1]=='D'){				// Get clicks depth of reel
 			num2str(cur_reel_depth,outstring,3);
@@ -150,6 +135,22 @@ int input_handler (char *instring, char *outstring){
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
+		break;
+	case 'T':
+		readStepper(outstring, 'P');
+		retval = 3;
+		break;
+	case 'H':								// Send stepper motor home
+		stepper_flag = 1;
+		writeStepper('H', '0');
+		break;
+	case 'F':								// Move stepper motor forward
+		stepper_flag = 1;
+		writeStepper('S', 'F');
+		break;
+	case 'B':								// Move stepper motor backward
+		stepper_flag = 1;
+		writeStepper('S', 'B');
 		break;
 	case 'S':		//All Stop
 		ALL_STOP_FLAG=1;
@@ -217,6 +218,7 @@ void all_stop_fun(void){
 	TA1CCR2 = 0;
 	reel_flag = 0;
 	reel_dir = 0;
+	stepper_flag = 0;
 
 	status_code = 4;
 }
