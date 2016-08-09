@@ -2,7 +2,7 @@
 #define STEPPER_H_
 
 
-#define STEPS_PER_CLICK 350
+#define STEPS_PER_CLICK 400
 #define FORWARD 1
 #define BACKWARD -1
 

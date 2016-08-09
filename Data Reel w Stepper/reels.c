@@ -100,13 +100,17 @@ int goToClick(int setClick){
 
 }//goToClick()
 
-void writeStepper(char firstByte, char secondByte){
+void writeStepper(char *command){
 	char i2cbuf[12];
 	i2cbuf[0] = STEPPER_ADDR;
 	i2cbuf[1]= ' ';
-	i2cbuf[2] = firstByte;
-	i2cbuf[3] = secondByte;
-	i2c_rx_bb(i2cbuf,4,0);
+	i2cbuf[2] = command[0];
+	i2cbuf[3] = command[1];
+	i2cbuf[4] = command[2];
+	i2cbuf[5] = command[3];
+	i2cbuf[6] = command[4];
+
+	i2c_rx_bb(i2cbuf,7,0);
 }
 
 void readStepper(char *stepper_return, char commandByte){
@@ -153,7 +157,7 @@ __interrupt void Port_1(void)
 	}//if limit switch
 
 	if(P1IFG & BIT5){
-	//PWM In read - pull up reels if signal drops below neutral
+		//PWM In read - pull up reels if signal drops below neutral
 		//Read PWM edges
 		if (P1IN&BIT5){		//Positive Edge
 			if (TA0R>(0xFFFF-4000)){
@@ -169,7 +173,7 @@ __interrupt void Port_1(void)
 			P1IES &=~ BIT5;
 		}
 
-	//Compare pwm signal to neutral
+		//Compare pwm signal to neutral
 		if(pwmval < PWM_NEU){
 			set_reel_depth= -10;
 			reel_flag = 1;

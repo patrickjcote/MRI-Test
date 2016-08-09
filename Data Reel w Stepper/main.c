@@ -23,6 +23,7 @@ int main(void) {
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
 
 	volatile char identify[]="DReel";
+	volatile char command[]="Sx   ";
 	volatile int n, ok2send=0;
 
 	__delay_cycles(50000);
@@ -85,9 +86,11 @@ int main(void) {
 					raster_dir = 1;
 
 				if(turns < TURNS_PER_WRAP && raster_dir == 1)
-					writeStepper('S','F');
+					command[1]='F';
 				else
-					writeStepper('S','B');
+					command[1]='B';
+
+				writeStepper(command);
 				stepper_flag = 0;
 			}
 		}
@@ -107,6 +110,7 @@ int main(void) {
 
 int input_handler (char *instring, char *outstring){
 	int retval=0;
+	volatile char command[] = "     ";	// Initialize 5 bytes to command
 	switch (instring[0]){
 	case 'R':
 		if (instring[1]=='D'){				// Set values for the depth of clicks the reel will go to
@@ -142,16 +146,30 @@ int input_handler (char *instring, char *outstring){
 		break;
 	case 'H':								// Send stepper motor home
 		stepper_flag = 1;
-		writeStepper('H', '0');
+		command[0] = 'H';
+		writeStepper(command);
 		break;
 	case 'F':								// Move stepper motor forward
 		stepper_flag = 1;
-		writeStepper('S', 'F');
+		command[0] = 'S';
+		command[1] = 'F';
+		writeStepper(command);
 		break;
 	case 'B':								// Move stepper motor backward
 		stepper_flag = 1;
-		writeStepper('S', 'B');
+		command[0] = 'S';
+		command[1] = 'B';
+		writeStepper(command);
 		break;
+	case 'G':
+		stepper_flag = 1;
+		command[0] = 'G';
+		command[1] = instring[1];
+		command[2] = instring[2];
+		command[3] = instring[3];
+		writeStepper(command);
+		break;
+
 	case 'S':		//All Stop
 		ALL_STOP_FLAG=1;
 		all_stop_fun();
