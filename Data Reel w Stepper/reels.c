@@ -76,6 +76,7 @@ int goToClick(int setClick){
 		if(cur_reel_depth > setClick){
 			reel_dir = 1;
 			TA1CCR2 = MOTOR_DOWN;
+			stepper_flag = 1;
 			return reel_dir;
 		}
 		if(cur_reel_depth < setClick){

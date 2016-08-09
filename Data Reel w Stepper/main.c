@@ -27,7 +27,7 @@ int main(void) {
 	volatile int n, ok2send=0;
 
 	__delay_cycles(50000);
-	i2c_slave_init(0x49);  //Set slave address to 0x48
+	i2c_slave_init(0x49);  // Set slave address to 0x49
 	__delay_cycles(50000);
 	i2c_init();
 	__delay_cycles(50000);
@@ -74,22 +74,19 @@ int main(void) {
 		}
 
 
-
 		if (!ALL_STOP_FLAG){
 			if(reel_flag){
 				status_code = goToClick(set_reel_depth);
 			}
 			if(stepper_flag){
-				if(turns > TURNS_PER_WRAP)
-					raster_dir = -1;
-				if(turns < 1)
-					raster_dir = 1;
-
-				if(turns < TURNS_PER_WRAP && raster_dir == 1)
-					command[1]='F';
-				else
-					command[1]='B';
-
+				volatile int step_pos;
+				step_pos = cur_reel_depth%(TURNS_PER_WRAP*2);
+				if(step_pos > TURNS_PER_WRAP)
+					step_pos = TURNS_PER_WRAP - (step_pos - TURNS_PER_WRAP);
+				if(step_pos < 0 || reel_dir == 2)
+					step_pos = TURNS_PER_WRAP/2;
+				command[0] = 'G';
+				num2str(step_pos,command+1,3);
 				writeStepper(command);
 				stepper_flag = 0;
 			}
@@ -104,7 +101,6 @@ int main(void) {
 			reel_dir = 0;
 			stepper_flag = 0;
 		}
-
 	}
 }
 
