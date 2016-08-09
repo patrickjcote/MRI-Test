@@ -23,8 +23,8 @@ void initStepper(void) {
 	TA0CTL = TASSEL_2 + MC_1;	// smclock and count up
 
 	// Stepper Limit Switch
-	P1DIR &= ~BIT5;				// Limit switch input on 2.1
-	P1REN |= BIT5;				// Enable Pull Up (P1.4)
+	P1DIR &= ~BIT5;				// Limit switch input on 1.5
+	P1REN |= BIT5;				// Enable Pull Up (P1.5)
 
 	stepper_pos = -1;
 	stepper_dir = 0;
@@ -42,7 +42,22 @@ void step(int direction){
 	while (step_count < STEPS_PER_CLICK ){
 		stepper_en = 1;
 	}
-}
+}//step()
+
+void goToStep(int setStep){
+	if(stepper_pos > setStep){
+		setDirection(BACKWARD);
+		while(stepper_pos > setStep){
+			stepper_en = 1;
+		}
+	}
+	else if(stepper_pos < setStep){
+		setDirection(FORWARD);
+		while(stepper_pos < setStep){
+			stepper_en = 1;
+		}
+	}
+}//goToStep()
 
 void setDirection(int direction){
 
@@ -57,7 +72,7 @@ void setDirection(int direction){
 	for(n=0;n<100;n++);		// ~5us delay
 
 
-}// setDirection()
+}//setDirection()
 
 int findHome(void)
 {
@@ -75,14 +90,14 @@ int findHome(void)
 	stepper_en = 0;
 	return 1;
 
-}// findHome()
+}//findHome()
 
 
 // Timer A0 interrupt service routine
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void Timer_A (void)
 {
-	// Enable and Direction checks
+	// Enable check
 	if(stepper_en)
 		P1OUT |= BIT4;		// Enable Motor
 	else
@@ -90,6 +105,6 @@ __interrupt void Timer_A (void)
 
 	if(stepper_en){
 		step_count++;
-		stepper_pos += stepper_dir;	// Inc/Dec stepper position
+		stepper_pos += stepper_dir;	// Inc/Dec stepper position counter
 	}
 }

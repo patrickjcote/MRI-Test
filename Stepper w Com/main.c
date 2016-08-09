@@ -85,6 +85,10 @@ int input_handler (char *instring, char *outstring){
 		findHome();
 		retval=0;
 		break;
+	case 'G':			// Go To Step
+		goToStep(str2num(instring+2,3)*STEPS_PER_CLICK);
+		retval=0;
+		break;
 	default:
 		outstring[0]= instring[0];
 		outstring[1]= instring[1];
