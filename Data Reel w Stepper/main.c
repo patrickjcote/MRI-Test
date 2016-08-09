@@ -14,21 +14,20 @@ void all_stop_fun(void);
 unsigned char TXData[12],RXData[12];		//Buffers for the Slave of ths device
 volatile int TXData_ptr=0,RXData_ptr=0;		//Pointers and flags for the slave device
 
-volatile int cur_reel_depth, reel_dir, set_reel_depth, k ;
-volatile char status_code, interrupt_code, avg_pointer;
-volatile char pwm_pullup_flag, ALL_STOP_FLAG, reel_flag, autolevel_flag, get_level_flag;
+volatile int cur_reel_depth, reel_dir, set_reel_depth, raster_dir, turns, k;
+volatile char status_code, interrupt_code, step_return[3];
+volatile char pwm_pullup_flag, ALL_STOP_FLAG, reel_flag, stepper_flag;
 volatile unsigned int timeout_count1, timeout_count2, pwmread = 0, pwmval = 0;
-volatile int set_angle, avg_angle[SAMPLES], lvl_compare;
-float current_angle, average;
 
 int main(void) {
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
 
-	volatile char identify[]="HReel";
+	volatile char identify[]="DReel";
+	volatile char command[]="Sx   ";
 	volatile int n, ok2send=0;
 
 	__delay_cycles(50000);
-	i2c_slave_init(0x48);  //Set slave address to 0x48
+	i2c_slave_init(0x49);  // Set slave address to 0x49
 	__delay_cycles(50000);
 	i2c_init();
 	__delay_cycles(50000);
@@ -41,8 +40,6 @@ int main(void) {
 
 
 	initReel();
-	__delay_cycles(50000);
-	init_ADXL();
 	__delay_cycles(50000);
 
 	for (k=0;k<200;k++)
@@ -77,23 +74,22 @@ int main(void) {
 		}
 
 
-
 		if (!ALL_STOP_FLAG){
 			if(reel_flag){
 				status_code = goToClick(set_reel_depth);
 			}
-			if(autolevel_flag)
-				autoLevel();
-		}
-
-		// Level the reel regardless of auto stop
-		if(get_level_flag){
-			lvl_compare++;
-			if(lvl_compare > LOW_PASS){
-				getLevel();
-				lvl_compare = 0;
+			if(stepper_flag){
+				volatile int step_pos;
+				step_pos = cur_reel_depth%(TURNS_PER_WRAP*2);
+				if(step_pos > TURNS_PER_WRAP)
+					step_pos = TURNS_PER_WRAP - (step_pos - TURNS_PER_WRAP);
+				if(step_pos < 0 || reel_dir == 2)
+					step_pos = TURNS_PER_WRAP/2;
+				command[0] = 'G';
+				num2str(step_pos,command+1,3);
+				writeStepper(command);
+				stepper_flag = 0;
 			}
-			get_level_flag =0;
 		}
 
 		if (ALL_STOP_FLAG){
@@ -103,14 +99,14 @@ int main(void) {
 			TA1CCR2 = 0;
 			reel_flag = 0;
 			reel_dir = 0;
-			autolevel_flag = 0;
+			stepper_flag = 0;
 		}
-
 	}
 }
 
 int input_handler (char *instring, char *outstring){
 	int retval=0;
+	volatile char command[] = "     ";	// Initialize 5 bytes to command
 	switch (instring[0]){
 	case 'R':
 		if (instring[1]=='D'){				// Set values for the depth of clicks the reel will go to
@@ -119,14 +115,12 @@ int input_handler (char *instring, char *outstring){
 			timeout_count1 = 0;
 			timeout_count2 = 0;
 			interrupt_code = 0;
-			if(!autolevel_flag)
-				autolevel_flag = 2;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
 		break;
 	case 'C':
-		if (instring[1]=='D'){				// Get clicks
+		if (instring[1]=='D'){				// Get clicks depth of reel
 			num2str(cur_reel_depth,outstring,3);
 			retval=3;
 		}
@@ -138,76 +132,57 @@ int input_handler (char *instring, char *outstring){
 			timeout_count1 = 0;
 			timeout_count2 = 0;
 			interrupt_code = 0;
-			if(!autolevel_flag)
-				autolevel_flag = 2;
 			retval=0;
 			ALL_STOP_FLAG=0;
 		}
 		break;
-	case 'L':	// Set Reel Level
-		if (instring[1]=='U'){	// Up position
-			autolevel_flag = 1;
-			set_angle = REELING_ANGLE;
-			retval=0;
-			ALL_STOP_FLAG=0;
-		}
-		if (instring[1]=='D'){ // Down position
-			autolevel_flag = 1;
-			set_angle = -REELING_ANGLE;
-			retval=0;
-			ALL_STOP_FLAG=0;
-		}
-		if (instring[1]=='L'){ // Level the reel
-			autolevel_flag = 1;
-			set_angle = 0;
-			retval=0;
-			ALL_STOP_FLAG=0;
-		}
-		if (instring[1]=='T'){ // Travel mode, send the reel all the way down
-			autolevel_flag = 1;
-			set_angle = -20;
-			retval=0;
-			ALL_STOP_FLAG=0;
-		}
-		if (instring[1]=='S'){	// Stop all leveling
-			autolevel_flag = 0;
-			TA1CCR1=PWM_NEU;
-			retval=0;
-			ALL_STOP_FLAG=0;
-		}
-		if (instring[1]=='A'){	// Auto level -> set level based on clicks
-			autolevel_flag = 2;
-			ALL_STOP_FLAG=0;
-			retval = 0;
-		}
-		if (instring[1]=='Q'){	// Query
-			if (instring[2]=='A'){	// Get average angle of reel
-				num2str((int)average,outstring,3);
-				retval=3;
-			}
-			if (instring[2]=='S'){	// Get level the reel is set to
-				num2str(set_angle,outstring,3);
-				retval=3;
-			}
-		}
+	case 'T':
+		readStepper(outstring, 'P');
+		retval = 3;
 		break;
-	case 'S':
+	case 'H':								// Send stepper motor home
+		stepper_flag = 1;
+		command[0] = 'H';
+		writeStepper(command);
+		break;
+	case 'F':								// Move stepper motor forward
+		stepper_flag = 1;
+		command[0] = 'S';
+		command[1] = 'F';
+		writeStepper(command);
+		break;
+	case 'B':								// Move stepper motor backward
+		stepper_flag = 1;
+		command[0] = 'S';
+		command[1] = 'B';
+		writeStepper(command);
+		break;
+	case 'G':
+		stepper_flag = 1;
+		command[0] = 'G';
+		command[1] = instring[1];
+		command[2] = instring[2];
+		command[3] = instring[3];
+		writeStepper(command);
+		break;
+
+	case 'S':		//All Stop
 		ALL_STOP_FLAG=1;
 		all_stop_fun();
 		retval=0;
 		break;
-	case 'I':	// Comms check
+	case 'I':		//Comms check for web interface
 		outstring[0]= 'O';
 		outstring[1]= 'k';
 		retval=2;
 		break;
-	case 'Q':	// Query status
+	case 'Q':		//Query status
 		outstring[0]=(0x30+ALL_STOP_FLAG);
 		outstring[1]=(0x30+interrupt_code);
 		outstring[2]=(0x30+status_code);
 		retval=3;
 		break;
-	default:	// Invalid command, repeat back the command
+	default:
 		outstring[0]= instring[0];
 		outstring[1]= instring[1];
 		outstring[2]= instring[2];
@@ -257,7 +232,7 @@ void all_stop_fun(void){
 	TA1CCR2 = 0;
 	reel_flag = 0;
 	reel_dir = 0;
-	autolevel_flag = 0;
+	stepper_flag = 0;
 
 	status_code = 4;
 }
