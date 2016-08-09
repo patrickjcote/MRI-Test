@@ -15,10 +15,14 @@ volatile unsigned int set_purge_time, purge_timer, purge_compare;
 
 int main(void) {
 	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
-	volatile char identify[]="Valve";
+
 	volatile int n, k, ok2send=0;
 	__delay_cycles(50000);
-	i2c_slave_init(0x50);  //Set slave address to 0x50
+
+	// Set slave address and Device Name
+	// (Valve1 -> 0x50) | (Valve2 -> 0x51)
+	i2c_slave_init(0x50);
+	volatile char identify[]="Valve1";
 	uart_init(4);   // set uart baud rate to 9600
 
 	BCSCTL1 = CALBC1_16MHZ;                    // Set Clock Speed
