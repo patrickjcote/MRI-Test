@@ -2,7 +2,7 @@
 #define STEPPER_H_
 
 
-#define STEPS_PER_CLICK 400
+#define STEPS_PER_CLICK 400  // 14,000/CLICKS_PER_WRAP
 #define FORWARD 1
 #define BACKWARD -1
 
@@ -12,7 +12,7 @@ int findHome(void);
 void initStepper(void);
 
 
-volatile int stepper_pos, step_count, stepper_dir, stepper_en;
+extern volatile int stepper_pos, step_count, stepper_dir, stepper_en;
 
 
 
