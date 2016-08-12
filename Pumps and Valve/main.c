@@ -2,6 +2,12 @@
 #include "serial_handler.h"
 
 
+// Set slave address and Device Name
+// BOARD_ID # => Name:"Valve#"  Slave Addr:0x5#
+// 0 Purge Pump, valve1 (sampler or pumps)
+// 1 Prime Pump, valve2 (purge or prime)
+
+#define BOARD_ID 1
 
 
 int str2num(char *,int );
@@ -19,10 +25,10 @@ int main(void) {
 	volatile int n, k, ok2send=0;
 	__delay_cycles(50000);
 
-	// Set slave address and Device Name
-	// (Valve1 -> 0x50) | (Valve2 -> 0x51)
-	i2c_slave_init(0x50);
-	volatile char identify[]="Valve1";
+
+	i2c_slave_init(0x50 + BOARD_ID);
+	volatile char identify[]="Valve";
+	identify[5] = 0x30 + BOARD_ID;
 	uart_init(4);   // set uart baud rate to 9600
 
 	BCSCTL1 = CALBC1_16MHZ;                    // Set Clock Speed
@@ -90,7 +96,6 @@ int main(void) {
 		if (!ALL_STOP_FLAG){
 			if(purge_flag){
 				P2OUT |= BIT1;
-				P2OUT &= ~BIT0;
 			}
 
 		}
@@ -108,37 +113,29 @@ int input_handler (char *instring, char *outstring){
 	int retval=0;
 	switch (instring[0]){
 	case 'P':	// Set Purge Time
-		if(!(P2OUT&BIT0)){	//If the valve is in the right position
 			purge_flag = 1;
 			set_purge_time = str2num(instring+1,3);
 			ALL_STOP_FLAG=0;
 			num2str(1,outstring,3);
 			retval=3;
-		}
-		else{				// Else return vlv for valve error
-			outstring[0] = 'V';
-			outstring[1] = 'l';
-			outstring[2] = 'V';
-			retval=3;
-		}
 		break;
 	case 'V':	//Change valve Position
-		if(instring[1] == 'S')	// Towards Sampler
+		if(instring[1] == 'C')	// Close
 			P2OUT |= BIT0;
-		if(instring[1] == 'P')	// Towards Pump
+		if(instring[1] == 'O')	// Open
 			P2OUT &= ~BIT0;
 		retval = 0;
 		break;
 	case 'Q':			// Query status
 		if(P2OUT & BIT1)
-			outstring[0] = '1';
+			outstring[0] = '1';		// Pumping
 		else
-			outstring[0] = '0';
+			outstring[0] = '0';		// Not Pumping
 		if(P2OUT & BIT0)
-			outstring[2] = '1';
+			outstring[2] = '1';		// Valve Closed
 		else
-			outstring[2] = '0';
-		outstring[1]= 'x';
+			outstring[2] = '0';		// Valve Open
+		outstring[1]= 'x';			// Split query output (PUMPxVALVE)
 		retval=3;
 		break;
 	case 'T':		// Return pump time left
@@ -217,7 +214,7 @@ __interrupt void Timer_A (void)
 		P2OUT |= BIT1; // Pump on
 		purge_compare++;
 		if(purge_compare > 30){
-		// (purge_compare == 30) == 1 second
+			// (purge_compare == 30) == 1 second
 			purge_timer++;
 			purge_compare = 0;
 		}
