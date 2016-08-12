@@ -12,6 +12,7 @@ a{
 <br><br>
 <a href="data/">Data Sonde</a><br>
 <a href="hose/">Hose Reel</a><br>
+<a href="sampler/">Sampler</a><br>
 <br><br><br><br>
 <div style="width:30%">
 <?php include("connection.php");?>

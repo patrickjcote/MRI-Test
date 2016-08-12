@@ -7,6 +7,7 @@ function connected($instring){
                 echo "<font color='red'>No Connection</font>";
         }
 }
+usleep(50000);
 $data_reel_connection = shell_exec("sudo python data-reel.py i 0 &");
 ?>
 <?php

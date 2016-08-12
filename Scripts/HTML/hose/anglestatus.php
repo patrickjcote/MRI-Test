@@ -1,9 +1,13 @@
 <?php
 
 
+usleep(5000);
 $set_angle = shell_exec("sudo python hose-reel.py LQS 0 &");
+usleep(5000);
 $current_angle = shell_exec("sudo python hose-reel.py LQA 0 &");
+usleep(5000);
 $current_depth = shell_exec("sudo python hose-reel.py cd 0 &");
+usleep(5000);
 $current_status = shell_exec("sudo python hose-reel.py q 0 &");
 
 switch($current_status){

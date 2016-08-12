@@ -53,21 +53,4 @@ class Reel:
         print('Status Code:')
         self.q()
 
-cmd = sys.argv[1]
-value = sys.argv[2]
 
-x = Reel(0x52)
-if(cmd == "rd"):
-    x.rd(int(value))
-elif(cmd == "cd"):
-    x.cd()
-elif(cmd == "q"):
-    x.q()
-elif(cmd == "i"):
-    x.i()
-elif(cmd == "s"):
-    x.status()
-elif(cmd == "pu"):
-    x.pu()
-else:
-    x.write(cmd)

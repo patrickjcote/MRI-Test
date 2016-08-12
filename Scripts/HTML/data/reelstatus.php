@@ -1,7 +1,8 @@
 <?php
 
-
+usleep(50000);
 $dreel_depth = shell_exec("sudo python data-reel.py cd 0 &");
+usleep(50000);
 $dreel_status = shell_exec("sudo python data-reel.py q 0 &");
 
 switch($dreel_status){

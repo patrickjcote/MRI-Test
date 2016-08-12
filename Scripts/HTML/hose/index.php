@@ -8,16 +8,16 @@
 $(document).ready(function(){
         setInterval(function() {
                 $("#reelstatus").load("reelstatus.php");
-        }, 1111);
+        }, 2002);
         setInterval(function() {
                 $("#pumpstatus").load("pumpstatus.php");
-        }, 1222);
+        }, 1000);
         setInterval(function() {
                 $("#anglestatus").load("anglestatus.php");
-        }, 1333);
+        }, 2303);
         setInterval(function() {
                 $("#connection").load("connection.php");
-        }, 1555);
+        }, 5005);
 });
 
 </script>
@@ -66,22 +66,49 @@ div{
 $value = $_POST["value"];
 $cmd = $_POST["cmd"];
 $board = $_POST["board"];
-$current_depth = shell_exec("sudo python hose-reel.py cd 0 &");
-$current_status = shell_exec("sudo python hose-reel.py q 0 &");
-$current_valve = shell_exec("sudo python valve.py q 0 &");
+
 if($board == "hose"){
+        usleep(5000);
         $hose_output = shell_exec("sudo python hose-reel.py $cmd $value &");
 }
 if($board == "prime"){
-        $prime_output = shell_exec("sudo python prime.py $cmd $value &");
+        usleep(5000);
+        $prime_output = shell_exec("sudo python valve2.py $cmd $value &");
 }
 if($board == "valve"){
-        $valve_output = shell_exec("sudo python valve.py $cmd $value &");
+        if($cmd == "v"){
+                if($value == "P"){
+                        usleep(5000);
+                        shell_exec("sudo python valve1.py $cmd 'C' &");
+                        usleep(5000);
+                        shell_exec("sudo python valve2.py $cmd 'C' &");
+                }
+                if($value == "C"){
+                        usleep(5000);
+                        shell_exec("sudo python valve1.py $cmd 'C' &");
+                        usleep(5000);
+                        shell_exec("sudo python valve2.py $cmd 'O' &");
+                }
+                if($value == "S"){
+                        usleep(5000);
+                        shell_exec("sudo python valve1.py $cmd 'O' &");
+                        usleep(5000);
+                        shell_exec("sudo python valve2.py $cmd 'O' &");
+                }
+        }
+        else{
+                $valve_output = shell_exec("sudo python valve1.py $cmd $value &");
+        }
+
+
 }
 if($board == "all"){
+        usleep(5000);
         $hose_output = shell_exec("sudo python hose-reel.py $cmd $value &");
-        $valve_output = shell_exec("sudo python valve.py $cmd $value &");
-        $prime_output = shell_exec("sudo python prime.py $cmd $value &");
+        usleep(5000);
+        $valve_output = shell_exec("sudo python valve1.py $cmd $value &");
+        usleep(5000);
+        $prime_output = shell_exec("sudo python valve2.py $cmd $value &");
 }
 ?>
 
@@ -110,7 +137,7 @@ if($board == "all"){
         </form>
         <div id="setdepth">
             <form action="index.php" method="post">
-                Set Depth: <input type="text" name="value" value="<?php if($board == "hose") echo $value;?>"/>
+                Set Depth: <input type="text" name="value" value=""/>
                 <input type="hidden" name="cmd" value="rd" />
                 <input type="hidden" name="board" value="hose" />
                 <input type="submit" value="Set" />
@@ -144,26 +171,33 @@ if($board == "all"){
                 <input type="hidden" name="cmd" value="v" />
                 <input type="hidden" name="value" value="S" />
                 <input type="hidden" name="board" value="valve" />
-                <input type="submit" value="Valve to Sample Position" />
+                <input type="submit" value="Valves to Sample Position" />
+            </form>
+            <form action="index.php" method="post">
+                <input type="hidden" name="cmd" value="v" />
+                <input type="hidden" name="value" value="C" />
+                <input type="hidden" name="board" value="valve" />
+                <input type="submit" value="Valves to Purge Position"/>
             </form>
             <form action="index.php" method="post">
                 <input type="hidden" name="cmd" value="v" />
                 <input type="hidden" name="value" value="P" />
                 <input type="hidden" name="board" value="valve" />
-                <input type="submit" value="Valve to Purge Position"/>
+                <input type="submit" value="Valves to Prime Position"/>
             </form>
             <form action="index.php" method="post">
                 Purge Time: <input type="text" name="value"\
-                 <?php if($valveFlag) {echo 'disabled value="Check Valve Status"';}?>/>
+                 <?php if($valveFlag != 0) {echo 'disabled value="Check Valve Status"';}?>/>
                 <input type="hidden" name="cmd" value="p" />
                 <input type="hidden" name="board" value="valve" />
-                <input type="submit" value="Purge"<?php if($valveFlag) {echo 'disabled';}?> />
+                <input type="submit" value="Purge"<?php if($valveFlag != 0) {echo 'disabled';}?> />
             </form>
             <form action="index.php" method="post">
-                Prime Time: <input type="text" name="value" />
+                Prime Time: <input type="text" name="value"\
+                 <?php if($valveFlag != 2) {echo 'disabled value="Check Valve Status"';}?>/>
                 <input type="hidden" name="cmd" value="p" />
                 <input type="hidden" name="board" value="prime" />
-                <input type="submit" value="Prime" />
+                <input type="submit" value="Prime" <?php if($valveFlag != 2) {echo 'disabled';}?>/>
             </form>
         </div>
     </div>
@@ -171,7 +205,9 @@ if($board == "all"){
     <br>
 <div id="connection"><?php include('connection.php');?></div>
 <div id="footer">
-    <a href="/data/" target="_blank">View Data Sonde Page</a>
+    <a href="../data/" target="_blank">Data Sonde Page</a>
+    <a href="../sampler/" target="_blank">Sampler Page</a>
+    <a href="../" target="_blank">Home</a>
 </div>
 </center>        
 </body>
