@@ -56,7 +56,7 @@ int main(void) {
 	TA1CTL = TASSEL_2 + MC_1 + ID_3;
 	TA1CCTL0 = CCIE;
 
-	//Valve and pump output
+	//Valve + Pump output
 	P2DIR |= BIT0 + BIT1;
 	P2OUT &= ~BIT0;
 	P2OUT &= ~BIT1;
