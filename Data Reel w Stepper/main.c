@@ -157,7 +157,7 @@ int input_handler (char *instring, char *outstring){
 		command[1] = 'B';
 		writeStepper(command);
 		break;
-	case 'G':
+	case 'G':								// Go to step
 		stepper_flag = 1;
 		command[0] = 'G';
 		command[1] = instring[1];

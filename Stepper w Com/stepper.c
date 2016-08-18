@@ -82,7 +82,7 @@ int findHome(void)
 
 	stepper_en = 1;
 
-	for(n=0;n<50;n++){
+	for(n=0;n<800;n++){
 		while(P1IN & BIT5)
 		{
 			stepper_dir = BACKWARD;
