@@ -74,6 +74,7 @@ int goToClick(int setClick){
 		return 3;
 	}
 
+	// If set depth != current depth && the limit switch is not engaged
 	if(cur_reel_depth != setClick && (P1IN & BIT4)){
 		if(cur_reel_depth > setClick){
 			reel_dir = 1;
@@ -89,7 +90,6 @@ int goToClick(int setClick){
 	else{
 		reel_dir = 0;
 		reel_flag = 0;
-		autolevel_flag = 0;
 		TA1CCR1=PWM_NEU;
 		TA1CCR2 = PWM_NEU;
 		ALL_STOP_FLAG = 1;
@@ -107,10 +107,10 @@ void autoLevel(){
 	volatile int currentWrap;
 
 	// Calculate current wrap level to determine angle
-	currentWrap = (cur_reel_depth / TURNS_PER_WRAP)+1+TOP_WRAP_ANGLE;
+	currentWrap = ((cur_reel_depth + TURNS_PER_WRAP - REEL_O) / TURNS_PER_WRAP)+1+TOP_WRAP_ANGLE;
 	if(autolevel_flag == 2){
 		if(currentWrap % 2)
-			set_angle = +REELING_ANGLE;
+			set_angle = REELING_ANGLE;
 		else
 			set_angle = -REELING_ANGLE;
 	}
