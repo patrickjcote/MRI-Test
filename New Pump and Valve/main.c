@@ -9,6 +9,8 @@
 #define STOPPED  22000		// PWM Neutral limit
 #define FORWARD	30000		// PWM high limit
 #define BACKWARD 15000	// PWM low limit
+#define CLICKS_MULTIPLIER 30	// 0-65
+#define RAMP_ON_STOP 1
 
 int str2num(char *,int );
 int input_handler (char *, char *);
@@ -104,8 +106,6 @@ int main(void) {
 		if (!ALL_STOP_FLAG){
 			if(pump_flag)
 				pump(set_pump_dir);
-			if(pump_clicks > set_pump_clicks)
-				pump_flag = 0;
 		}
 		if (ALL_STOP_FLAG){
 			P2OUT |= BIT5;
@@ -136,7 +136,7 @@ int input_handler (char *instring, char *outstring){
 		if(instring[1] == 'S')	// Stop
 			set_pump_dir = STOPPED;
 
-		set_pump_clicks=str2num(instring+2,3);
+		set_pump_clicks= CLICKS_MULTIPLIER * str2num(instring+2,3);
 
 		retval = 0;
 		break;
@@ -151,6 +151,10 @@ int input_handler (char *instring, char *outstring){
 		outstring[0]= 'O';
 		outstring[1]= 'k';
 		retval=2;
+		break;
+	case 'Q':
+		num2str((set_pump_clicks - pump_clicks)/CLICKS_MULTIPLIER, outstring, 3);
+		retval = 3;
 		break;
 	case 'S':		// All Stop
 		ALL_STOP_FLAG=1;
@@ -229,6 +233,8 @@ void pump(int direction){
 				pump_speed = direction;
 			}
 		}// else if ramping Forward->Stopped->Reverse
+		if(pump_speed == direction)
+			ramp_flag=0;
 		ramp_step_flag = 0;
 	}// else ramping
 
@@ -253,6 +259,10 @@ __interrupt void TIMERA1_ISR(void)
 	}
 
 	motor[0] = pump_speed;
+	if(pump_speed == STOPPED && set_pump_dir == STOPPED){
+		pump_flag = 0;
+		P2OUT |= BIT5;
+	}
 
 
 }
@@ -263,9 +273,23 @@ __interrupt void Port_1(void)
 {
 
 	if(P1IFG & BIT5){	// Photo gate edge hit
-		pump_clicks++;
+		if(!ramp_flag)
+			pump_clicks++;
+
+		if(pump_clicks > set_pump_clicks){
+			ramp_flag = RAMP_ON_STOP;
+			pump_flag = 1;
+			pump_clicks = 0;
+			set_pump_clicks = 0;
+			set_pump_dir = STOPPED;
+			ALL_STOP_FLAG = 0;
+		}// if clicks met
+
+
 		P1IFG &= ~BIT5;
 	}
+
+
 }
 
 
