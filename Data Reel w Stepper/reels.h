@@ -8,7 +8,6 @@
 #ifndef REELS_H_
 #define REELS_H_
 
-// ------------ Tuning Parameters ----------------------
 
 #define MOTOR_UP 3500		// PWM high limit
 #define MOTOR_DOWN 2500		// PWM low limit
@@ -16,9 +15,6 @@
 #define REEL_TIMEOUT 8		// Seconds
 #define STEPPER_ADDR 0xA6	// I2C Address of stepper board
 
-
-
-// -----------------------------------------------------
 #define REEL_TIMEOUT_1 50000
 #define MAX_CLICKS 999		//Upper bound of allowable clicks
 #define MIN_CLICKS -5		//Lower bound of allowable clicks

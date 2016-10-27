@@ -71,7 +71,7 @@ int goToClick(int setClick){
 		return 3;		//Clicks missed, return timeout status
 	}
 
-	//determine reel direction
+	//determine reel direction, check if limit switch is engaged
 	if(cur_reel_depth != setClick && (P1IN & BIT4)){
 		if(cur_reel_depth > setClick){
 			reel_dir = 1;

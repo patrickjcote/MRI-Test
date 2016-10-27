@@ -14,9 +14,10 @@
 #define MOTOR_DOWN 2500		// PWM low limit
 #define ANGLE_TOLERANCE 1	// Degrees
 #define REELING_ANGLE 4		// Degrees
-#define TURNS_PER_WRAP 45	// (Width of reel)/(Hose OD)
+#define TURNS_PER_WRAP 40	// (Width of reel)/(Hose OD)
+#define REEL_O 15			// # of turns on last wrap
 #define REEL_TIMEOUT 6		// Seconds
-#define TOP_WRAP_ANGLE 1 	// 0-Up 1-Down
+#define TOP_WRAP_ANGLE 0 	// 0-Up 1-Down
 
 // -----------------------------------------------------
 

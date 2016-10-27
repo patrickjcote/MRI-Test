@@ -23,8 +23,9 @@ void initStepper(void) {
 	TA0CTL = TASSEL_2 + MC_1;	// smclock and count up
 
 	// Stepper Limit Switch
-	P1DIR &= ~BIT5;				// Limit switch input on 1.5
-	P1REN |= BIT5;				// Enable Pull Up (P1.5)
+	P1DIR &= ~BIT5;				// Limit switch input (P1.5)
+	P1REN |= BIT5;				// Enable Resistor (P1.5)
+	P1OUT |= BIT5;				// Pull Up Resistor (P1.5)
 
 	stepper_pos = -1;
 	stepper_dir = 0;
@@ -76,13 +77,16 @@ void setDirection(int direction){
 
 int findHome(void)
 {
+	volatile int n;
 	setDirection(BACKWARD);
 
 	stepper_en = 1;
 
-	while(P1IN & BIT5)
-	{
-		stepper_dir = BACKWARD;
+	for(n=0;n<800;n++){
+		while(P1IN & BIT5)
+		{
+			stepper_dir = BACKWARD;
+		}
 	}
 
 	stepper_pos = 0;
