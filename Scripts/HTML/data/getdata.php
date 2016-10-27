@@ -4,10 +4,11 @@
 <?php
 $date = date('Ymd.Hi').'.txt';
 $cmd = $_POST["cmd"];
+$filename = $_POST["filename"];
 if($cmd == 'getdata'){
-        exec("sudo python readsonde.py $date");
+        exec("sudo python readsonde.py $filename");
 }
-else{
+if($cmd == 'stopdata'){
         exec("sudo python stopread.py &");
 }
 if($cmd == "clear"){
@@ -33,7 +34,8 @@ a{
 <div style="clear:both">
 <form action="getdata.php" method="post">
         <input type="hidden" name="cmd" value="getdata">
-        <input type="submit" value="Start recording data (<?php echo $date;?>)">
+        File name:<input type="text" name="filename"></input>
+        <input type="submit" value="Start recording data">
 </form>
         <form action="getdata.php" method="post">
         <input type="hidden" name="cmd" value="stopdata">

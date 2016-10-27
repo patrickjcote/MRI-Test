@@ -11,6 +11,7 @@ $data_reel = shell_exec("sudo python data/data-reel.py i 0 &");
 $hose_reel = shell_exec("sudo python hose/hose-reel.py i 0 &");
 $pump1 = shell_exec("sudo python hose/valve1.py i 0 &");
 $pump2 = shell_exec("sudo python hose/valve2.py i 0 &");
+$sampler = shell_exec("sudo python sampler/sampler.py i 0 &");
 ?>
     <div style="float:left">
         Hose Reel: <?php connected($hose_reel); ?><br>

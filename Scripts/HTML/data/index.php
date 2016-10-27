@@ -21,7 +21,7 @@ $(document).ready(function(){
 
 <style>
 body{
-    font-size:150%;
+    font-size:120%;
 }
 div{
     padding-bottom:20px;
@@ -44,6 +44,7 @@ img{
 
 $value = $_POST["value"];
 $cmd = $_POST["cmd"];
+$board = $_POST["board"];
 $current_depth = shell_exec("sudo python data-reel.py cd 0 &");
 $current_status = shell_exec("sudo python data-reel.py q 0 &");
 if($board == "data"){
@@ -86,14 +87,14 @@ if($board == "all"){
             <form action="index.php" method="post">
                 <input type="hidden" name="cmd" value="pu" />
                 <input type="hidden" name="value" value="0" />
-                <input type="hidden" name="board" value="hose" />
+                <input type="hidden" name="board" value="data" />
                 <input type="submit" value="Pull Up Reel" />
             </form>
             <div id="setdepth">
               <form action="index.php" method="post">
-                 Set Depth: <input type="text" name="value" value="<?php if($board == "hose") echo $value;?>"/>
+                 Set Depth: <input type="text" name="value" value="" />
                     <input type="hidden" name="cmd" value="rd" />
-                    <input type="hidden" name="board" value="hose" />
+                    <input type="hidden" name="board" value="data" />
                     <input type="submit" value="Set" />
                </form>
             </div>
