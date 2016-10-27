@@ -1,17 +1,20 @@
 #include <msp430.h>
 #include "serial_handler.h"
+#include "servo_timer.h"
 
-#define RAMP_STEP_TIME 1 // seconds
-#define RAMP_STEP_SIZE 100 // PWM step size
+#define RAMP_STEP_TIME 5
+#define RAMP_STEP_SIZE 250 // PWM step size
 
-#define FORWARD	4000		// PWM high limit
-#define BACKWARD  2000		// PWM low limit
-#define STOPPED  3000		// PWM Neutral limit
+
+#define STOPPED  22000		// PWM Neutral limit
+#define FORWARD	30000		// PWM high limit
+#define BACKWARD 15000	// PWM low limit
 
 int str2num(char *,int );
 int input_handler (char *, char *);
 void num2str(int ,char *,int );
 void all_stop_fun(void);
+void pump(int);
 
 volatile int ramp_flag, ramp_step_flag, pump_flag, pump_speed, valve_dir, ALL_STOP_FLAG;
 volatile int set_pump_dir;
@@ -29,6 +32,7 @@ int main(void) {
 	volatile char identify[]="Valve2";
 	uart_init(4);   // set uart baud rate to 9600
 
+
 	BCSCTL1 = CALBC1_16MHZ;                    // Set Clock Speed
 	DCOCTL = CALDCO_16MHZ;
 	for (k=0;k<200;k++)
@@ -44,6 +48,10 @@ int main(void) {
 	TA1CTL = TASSEL_2 + MC_1 + ID_3;
 	TA1CCTL0 = CCIE;
 
+	//PWM Out Init
+	pwm_init(BIT0);
+	P1DIR |= BIT0;			// Output on BIT0
+
 	//Photogate input
 	P1DIR &= ~BIT5;				// Photo Gate input on 1.5
 	P1IE |=  BIT5;				// 1.5 interrupt enabled
@@ -57,6 +65,7 @@ int main(void) {
 	//Flags/variables init
 	pump_flag = 0;
 	pump_speed = STOPPED;
+	motor[0] = pump_speed;
 
 	set_pump_dir = STOPPED;
 	ramp_timer = 0;
@@ -74,9 +83,9 @@ int main(void) {
 
 			eos_flag=0;
 			if (rx_data_str[0]=='I'){	// If it is the identifying character return the device ID
-				for (n=0;n<9;n++)
+				for (n=0;n<7;n++)
 					tx_data_str[n]=identify[n];
-				uart_write_string(0,9);
+				uart_write_string(0,7);
 			}
 			else{
 				ok2send=input_handler(rx_data_str,tx_data_str);
@@ -123,7 +132,7 @@ int input_handler (char *instring, char *outstring){
 		if(instring[1] == 'F')	// Foward
 			set_pump_dir = FORWARD;
 		if(instring[1] == 'B')	// Backward
-			set_pump_dir = FORWARD;
+			set_pump_dir = BACKWARD;
 		if(instring[1] == 'S')	// Stop
 			set_pump_dir = STOPPED;
 
@@ -148,6 +157,7 @@ int input_handler (char *instring, char *outstring){
 		pump_flag=0;
 		retval = 0;
 		ramp_timer = 0;
+		pump_speed = STOPPED;
 		break;
 	default:
 		outstring[0]= instring[0];
@@ -224,15 +234,14 @@ void pump(int direction){
 
 }// pump()
 
-// Timer A0 interrupt service routine
 #pragma vector=TIMER1_A0_VECTOR
-__interrupt void Timer_A (void)
+__interrupt void TIMERA1_ISR(void)
 {
 	//Ramp Timer
 	if(pump_flag){
 		P2OUT ^= BIT5; // Flash status LED
 		ramp_compare++;
-		if(ramp_compare > 30){
+		if(ramp_compare > 1){
 			// (ramp_compare == 30) == 1 second
 			ramp_timer++;
 			ramp_compare = 0;
@@ -242,6 +251,8 @@ __interrupt void Timer_A (void)
 			ramp_timer = 0;
 		}
 	}
+
+	motor[0] = pump_speed;
 
 
 }
@@ -256,3 +267,5 @@ __interrupt void Port_1(void)
 		P1IFG &= ~BIT5;
 	}
 }
+
+
