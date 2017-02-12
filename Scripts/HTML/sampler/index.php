@@ -68,8 +68,8 @@ $sampler_output = shell_exec("sudo python sampler.py $cmd $value &");
             </form>
             <form action="index.php" method="post">
                 Pump # of mililiters: <input type="text" name="value"><br>
-                <input type="radio" name="cmd" value="pf">Forward
-                <input type="radio" name="cmd" value="pr">Backward<br>
+                <input type="radio" name="cmd" value="pf" checked="checked" >Sample
+                <input type="radio" name="cmd" value="pr">Purge<br>
                 <input type="submit" value="Pump" />
             </form>
         </div>
