@@ -23,12 +23,11 @@ void initReel(){
 	P2IFG &= ~CLICK_COUNTER;			// IFG clear
 	// Reel Motor PWM Timer Init
 	TA1CCR0 = 40000;					// PWM Period 20ms
-	TA1CCR1 = 0;
-	TA1CCTL1 = OUTMOD_7;
-	TA1CTL = TASSEL_2 + MC_1 + ID_3;
-	// PWM Output
-	P2DIR |= MOTOR_SIGNAL;				// Motor Control
-	P2SEL |= MOTOR_SIGNAL;
+	TA1CCR2 = 0;						// Initial duty cycle of 0
+	TA1CCTL1 = OUTMOD_7;				// Reset/Set
+	TA1CTL = TASSEL_2 + MC_1 + ID_3;	// smclock, up mode, 2^3 divider
+	P2DIR |= MOTOR_SIGNAL;				// Motor Output
+	P2SEL |= MOTOR_SIGNAL;				// TA1.2 Output
 	// Init Globals
 	reel.currentClick = 0;
 	reel.setClick = 0;
