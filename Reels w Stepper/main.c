@@ -1,9 +1,16 @@
+/*
+ * main.c
+ *
+ *  Created on: February 9, 2017
+ *      Author: Patrick Cote
+ *
+ */
+
+// Includes
 #include <msp430.h>
-#include "SerialComm/serial_handler.h"
-#include "SerialComm/i2c.h"
+#include "serial_handler.h"
+#include "i2c.h"
 #include "reels.h"
-
-
 
 // Global Variables
 volatile char statusCode, interruptCode, allStopFlag;
@@ -11,25 +18,35 @@ struct Reel reel;
 struct Stepper stepper;
 
 
-int main(void) {
 
-	volatile char identify[]= BOARD_NAME;
+int main(void) {
+	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
+
+	volatile char identify[]="HReel";
 	volatile int n, k, ok2send=0;
 
-	WDTCTL = WDTPW | WDTHOLD;		// Stop watchdog timer
-	BCSCTL1 = CALBC1_16MHZ;			// Set Clock Speed
+	__delay_cycles(50000);
+	i2c_slave_init(0x48);  //Set slave address to 0x48
+	__delay_cycles(50000);
+	i2c_init();
+	__delay_cycles(50000);
+	uart_init(4);   // set uart baud rate to 9600
+	__delay_cycles(50000);
+	BCSCTL1 = CALBC1_16MHZ;                    // Set Clock Speed
 	DCOCTL = CALDCO_16MHZ;
+	for (k=0;k<200;k++)
+		__delay_cycles(50000);
 
-	i2c_slave_init(BOARD_ADDRESS);  // Set slave address to BOARD_ADDRESS
-	i2c_init();						// Initialize I2C
-	uart_init(4);   				// Set uart baud rate to 9600
-
-	for (k=0;k<200;k++) __delay_cycles(50000);
 
 	initReel();
+	__delay_cycles(50000);
 	initStepper();
+	__delay_cycles(50000);
 
-	for (k=0;k<200;k++) __delay_cycles(50000);
+	for (k=0;k<200;k++)
+		__delay_cycles(50000);
+
+
 
 	__bis_SR_register(GIE);
 
@@ -43,9 +60,9 @@ int main(void) {
 		if (eos_flag){					// if data received from the UART
 			eos_flag=0;
 			if (rx_data_str[0]=='I'){	// If it is the identifying character return the device ID
-				for (n=0;n<9;n++)
+				for (n=0;n<8;n++)
 					tx_data_str[n]=identify[n];
-				uart_write_string(0,9);
+				uart_write_string(0,8);
 			}
 			else{
 				ok2send=input_handler(rx_data_str,tx_data_str);

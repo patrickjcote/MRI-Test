@@ -10,30 +10,30 @@ void initStepper(void) {
 	// Stepper PWM and Enable
 	P2DIR |= STEPPER_STEP + STEPPER_EN;
 	P2SEL |= STEPPER_STEP;		// TA0.1 Output on 2.6
+	P2SEL &= ~BIT7;		// TA0.1 Output on 2.6
 
-	TA0CCR0 = 16000;			// 1kHz
-	TA0CCR1 = 1600;				// 10% duty
-	TA0CCTL1 = OUTMOD_7;
+	TA0CCR0 = 16000;			// 1kHz - 16000
+	TA0CCR1 = 1600;				// 10% duty 1600
+	TA0CCTL1 = OUTMOD_7;		// Reset/Set
 	TA0CCTL0 = CCIE;			// Interrupt Enable
 	TA0CTL = TASSEL_2 + MC_1;	// smclock and count up
 
 	// Stepper Limit Switch
-	P1DIR &= ~STEPPER_LIMIT;			// Limit switch input
-	P1REN |= STEPPER_LIMIT;				// Enable Resistor
-	P1OUT |= STEPPER_LIMIT;				// Pull Up Resistor
+	P1DIR &= ~STEPPER_LIMIT;	// Limit switch input
+	P1REN |= STEPPER_LIMIT;		// Enable Resistor
+	P1OUT |= STEPPER_LIMIT;		// Pull Up Resistor
 
 	// Init Stepper Struct
 	stepper.position = -1;
 	stepper.stepCount = 0;
 	stepper.isEnabled = FALSE;
-	stepper.direction = 0;
+	stepper.direction = -1;
 	stepper.flag = 0;
 
 	findHome();					// Zero position of stepper arm
 }
 
 void goToStepPosition(int setPos){
-	if(setPos > CLICKS_PER_WRAP)
 		if(stepper.position >= setPos){
 			_StepDirBackward();
 			while(stepper.position >= setPos){
@@ -80,9 +80,9 @@ __interrupt void Timer_A00 (void)
 {
 
 	if(stepper.isEnabled)
-		P1OUT |= STEPPER_EN;		// Enable Motor
+		P2OUT |= STEPPER_EN;		// Enable Motor
 	else
-		P1OUT &= ~STEPPER_EN;		// Disable Motor
+		P2OUT &= ~STEPPER_EN;		// Disable Motor
 
 	if(stepper.isEnabled){
 		stepper.stepCount++;

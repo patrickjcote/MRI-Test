@@ -17,7 +17,6 @@ volatile int i2cmode=0;
 
 
 void i2c_slave_init(int address){
-	__delay_cycles(50000);
 	BCSCTL1 = CALBC1_16MHZ;                    // Set DCO
 	DCOCTL = CALDCO_16MHZ;
 
@@ -31,7 +30,6 @@ void i2c_slave_init(int address){
 	UCB0I2CIE |= UCSTTIE;                     // Enable STT interrupt
 	IE2 |= (UCB0TXIE+UCB0RXIE);                          // Enable TX interrupt
 	i2cmode=0;
-	__delay_cycles(50000);
 }
 
 void uart_init(int br){
@@ -52,7 +50,6 @@ void uart_init(int br){
 	UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
 	IE2 |= UCA0RXIE;                          // Enable USCI_A0 RX interrupt
 	__bis_SR_register(GIE);       			// interrupts enabled
-	__delay_cycles(50000);
 }
 
 void uart_write_string(int vals, int vale){

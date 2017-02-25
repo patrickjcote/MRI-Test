@@ -21,13 +21,25 @@ void initReel(){
 	P2IES |= CLICK_COUNTER;				// Hi/lo edge
 	P2REN |= CLICK_COUNTER;				// Enable Pull Up
 	P2IFG &= ~CLICK_COUNTER;			// IFG clear
-	// Reel Motor PWM Timer Init
-	TA1CCR0 = 40000;					// PWM Period 20ms
-	TA1CCR2 = 0;						// Initial duty cycle of 0
-	TA1CCTL1 = OUTMOD_7;				// Reset/Set
-	TA1CTL = TASSEL_2 + MC_1 + ID_3;	// smclock, up mode, 2^3 divider
-	P2DIR |= MOTOR_SIGNAL;				// Motor Output
-	P2SEL |= MOTOR_SIGNAL;				// TA1.2 Output
+
+
+//	// Reel Motor PWM Timer Init
+//	TA1CCR0 = 40000;					// PWM Period 20ms
+//	TA1CCR2 = 0;						// Initial duty cycle of 0
+//	TA1CCTL2 = OUTMOD_7;				// Reset/Set
+//	TA1CTL = TASSEL_2 + MC_1 + ID_3;	// smclock, up mode, 2^3 divider
+
+	TA1CCTL0 = CCIE;
+	//PWM Out Init
+	TA1CCR0 = 40000;			// PWM period
+	TA1CCR2 = 0;
+	TA1CCTL2 = OUTMOD_7;
+	TA1CTL = TASSEL_2 + MC_1 + ID_3;
+	//PWM Outputs
+	P2DIR |= BIT4;		// Motor Control P2.4
+	P2SEL |= BIT4;
+
+
 	// Init Globals
 	reel.currentClick = 0;
 	reel.setClick = 0;
@@ -53,7 +65,7 @@ int goToClick(){
 		return 3;		//Clicks missed, return timeout status
 	}
 
-	//determine reel direction, check if limit switch is engaged
+	// Check if limit switch is engaged, determine reel direction
 	if((reel.currentClick != reel.setClick) && (P1IN & BUMP_STOP)){
 		if(reel.currentClick > reel.setClick){
 			reel.direction = UP;
@@ -74,13 +86,12 @@ int goToClick(){
 		reel.PWM = PWM_NEU;
 	}
 	if(P1IN & BUMP_STOP)	// If bump stop switch not hit
-		return 0;
+		return 0;			// return Status Code: 0
 	else
 		interruptCode = 2;	// TODO: Comment Interrupt and Status Codes
 	return 5;
 
 }//goToClick()
-
 
 
 
@@ -149,4 +160,6 @@ __interrupt void Timer_A10 (void)
 {
 	// Set Reel Motor PWM duty cycle
 	TA1CCR2 = reel.PWM;
+
+	TA1CCTL0 &= ~CCIFG;		// Clear flag
 }

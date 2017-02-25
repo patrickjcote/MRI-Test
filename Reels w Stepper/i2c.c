@@ -15,7 +15,6 @@ void i2c_init(void){
 	DCOCTL = CALDCO_16MHZ;
 	P1DIR |= (SDA+SCL);
 	P1OUT |= (SDA+SCL);
-	__delay_cycles(50000);
 }
 
 

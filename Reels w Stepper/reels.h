@@ -9,12 +9,12 @@
 #define REELS_H_
 
 // Board Parameters
-#define BOARD_NAME 		"DReel"	// HReel or DReel
-#define BOARD_ADDRESS 	0x49	// Hose - 0x48, Data - 0x49
+#define BOARD_NAME 		"HReel"	// HReel or DReel
+#define BOARD_ADDRESS 	0x48	// Hose - 0x48, Data - 0x49
 #define CLICKS_PER_WRAP 35		// Hose - 40, Data - 35  ||  (Reel width)/(Cable OD)
 #define STEPS_PER_CLICK 400  	// Hose:(42k/CLICKS_PER_WRAP) Data:(14k/CLICKS_PER_WRAP)
-#define MOTOR_UP 		3500	// PWM high limit (3000-4000)
-#define MOTOR_DOWN 		2500	// PWM low limit  (2000-3000)
+#define MOTOR_DOWN 		3500	// PWM high limit (3000-4000)
+#define MOTOR_UP 		2500	// PWM low limit  (2000-3000)
 
 
 // I/O Pins
