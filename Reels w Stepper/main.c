@@ -18,25 +18,23 @@ struct Reel reel;
 struct Stepper stepper;
 
 
-
 int main(void) {
-	WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
+	WDTCTL = WDTPW | WDTHOLD;			// Stop watchdog timer
 
-	volatile char identify[]="HReel";
+	volatile char identify[]=BOARD_NAME;
 	volatile int n, k, ok2send=0;
 
 	__delay_cycles(50000);
-	i2c_slave_init(0x48);  //Set slave address to 0x48
+	i2c_slave_init(BOARD_ADDRESS); 		//Set slave address to 0x48
 	__delay_cycles(50000);
 	i2c_init();
 	__delay_cycles(50000);
-	uart_init(4);   // set uart baud rate to 9600
+	uart_init(4);						// set uart baud rate to 9600
 	__delay_cycles(50000);
-	BCSCTL1 = CALBC1_16MHZ;                    // Set Clock Speed
+	BCSCTL1 = CALBC1_16MHZ;				// Set Clock Speed to 16MHz
 	DCOCTL = CALDCO_16MHZ;
 	for (k=0;k<200;k++)
 		__delay_cycles(50000);
-
 
 	initReel();
 	__delay_cycles(50000);
@@ -46,11 +44,9 @@ int main(void) {
 	for (k=0;k<200;k++)
 		__delay_cycles(50000);
 
-
-
 	__bis_SR_register(GIE);
 
-	i2cTXData[0]=3;			//Dummy values first input to i2cTXData
+	i2cTXData[0]=3;						//Dummy values first input to i2cTXData
 	i2cTXData[1]=10;
 	i2cTXData[2]=12;
 
@@ -83,22 +79,7 @@ int main(void) {
 				statusCode = goToClick();
 			}
 			if(stepper.flag){
-				if(reel.direction == DOWN){		// While reeling down:
-					if(reel.currentWrap % 2){	// On odd wraps, step forward
-						_StepDirForward();
-					}
-					else{						// On even wraps, step backward
-						_StepDirBackward();
-					}
-				}// If reeling down
-				else{							// While reeling up:
-					if(reel.currentWrap % 2){	// On odd wraps, step backward
-						_StepDirBackward();
-					}
-					else{						// On even wraps, step forward
-						_StepDirForward();
-					}
-				}// Else if reeling up
+				stepper.isEnabled = TRUE;
 			}
 		}//if no allStopFlag
 
@@ -106,8 +87,11 @@ int main(void) {
 			TA1CCR2 = 0;
 			reel.flag = 0;
 			reel.direction = 0;
+			reel.setClick = reel.currentClick;
+			reel.PWM = PWM_NEU;
 			stepper.flag = 0;
 			stepper.isEnabled = FALSE;
+			stepper.setPos = stepper.position;
 		}//if allStopFlag
 
 	}//main while loop
@@ -117,7 +101,7 @@ int input_handler (char *instring, char *outstring){
 	int retval=0;
 	switch (instring[0]){
 	case 'R':
-		if (instring[1]=='D'){				// Set values for the depth of clicks the reel will go to
+		if (instring[1]=='D'){				// Set the reel depth in # of clicks
 			reel.setClick=str2num(instring+2,3);
 			reel.flag = 1;
 			reel.timeout1 = 0;
@@ -131,6 +115,9 @@ int input_handler (char *instring, char *outstring){
 		if (instring[1]=='D'){				// Get clicks depth of reel
 			num2str(reel.currentClick,outstring,3);
 			retval=3;
+		}
+		if (instring[1]=='C'){				// Manually set current click
+			reel.currentClick=str2num(instring+2,3);
 		}
 		break;
 	case 'P':
@@ -150,30 +137,48 @@ int input_handler (char *instring, char *outstring){
 		break;
 	case 'F':								// Move stepper motor forward one position
 		stepper.flag = 1;
-		goToStepPosition(stepper.position + 1);
+		stepper.setPos = stepper.position + 1;
+		allStopFlag=0;
 		break;
 	case 'B':								// Move stepper motor backward one position
 		stepper.flag = 1;
-		goToStepPosition(stepper.position - 1);
+		stepper.setPos = stepper.position - 1;
+		allStopFlag=0;
 		break;
-
-	case 'S':		//All Stop
+	case 'L':								// Return Current stepper position
+		num2str(stepper.position,outstring,3);
+		retval=3;
+		break;
+	case 'K':								// Return Current stepper set position
+		num2str(stepper.setPos,outstring,3);
+		retval=3;
+		break;
+	case 'E':								// Go To step
+		stepper.setPos = str2num(instring+2,3);
+		stepper.flag = 1;
+		allStopFlag=0;
+		break;
+	case 'W':								// Return Current stepper set position
+		num2str(reel.currentWrap,outstring,3);
+		retval=3;
+		break;
+	case 'S':								// All Stop
 		allStopFlag=1;
 		all_stop_fun();
 		retval=0;
 		break;
-	case 'I':		//Comms check for web interface
+	case 'I':								// Comms check for web interface
 		outstring[0]= 'O';
 		outstring[1]= 'k';
 		retval=2;
 		break;
-	case 'Q':		//Query status
+	case 'Q':								// Query status
 		outstring[0]=(0x30+allStopFlag);
 		outstring[1]=(0x30+interruptCode);
 		outstring[2]=(0x30+statusCode);
 		retval=3;
 		break;
-	default:
+	default:								// Default: return command bytes received
 		outstring[0]= instring[0];
 		outstring[1]= instring[1];
 		outstring[2]= instring[2];
@@ -216,13 +221,20 @@ void num2str(int inval,char *outstring,int n){
 }
 
 void all_stop_fun(void){
-	// turn off all pwm channels/motors
 
+	// turn off all pwm channels/motors
 	TA1CCR2 = 0;
 	reel.flag = 0;
 	reel.direction = 0;
 	stepper.flag = 0;
 	stepper.isEnabled = FALSE;
+	reel.flag = 0;
+	reel.direction = 0;
+	reel.setClick = reel.currentClick;
+	reel.PWM = PWM_NEU;
+	stepper.flag = 0;
+	stepper.isEnabled = FALSE;
+	stepper.setPos = stepper.position;
 
 	statusCode = 4;
 }

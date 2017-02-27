@@ -9,45 +9,30 @@ void initStepper(void) {
 
 	// Stepper PWM and Enable
 	P2DIR |= STEPPER_STEP + STEPPER_EN;
-	P2SEL |= STEPPER_STEP;		// TA0.1 Output on 2.6
-	P2SEL &= ~BIT7;		// TA0.1 Output on 2.6
+	P2SEL |= STEPPER_STEP;				// TA0.1 Output on 2.6
+	P2SEL &= ~BIT7;						// TA0.1 Output on 2.6
 
-	TA0CCR0 = 16000;			// 1kHz - 16000
-	TA0CCR1 = 1600;				// 10% duty 1600
-	TA0CCTL1 = OUTMOD_7;		// Reset/Set
-	TA0CCTL0 = CCIE;			// Interrupt Enable
-	TA0CTL = TASSEL_2 + MC_1;	// smclock and count up
+	TA0CCR0 = 16000;					// 1kHz - 16000
+	TA0CCR1 = 1600;						// 10% duty 1600
+	TA0CCTL1 = OUTMOD_7;				// Reset/Set
+	TA0CCTL0 = CCIE;					// Interrupt Enable
+	TA0CTL = TASSEL_2 + MC_1;			// smclock and count up
 
 	// Stepper Limit Switch
-	P1DIR &= ~STEPPER_LIMIT;	// Limit switch input
-	P1REN |= STEPPER_LIMIT;		// Enable Resistor
-	P1OUT |= STEPPER_LIMIT;		// Pull Up Resistor
+	P1DIR &= ~STEPPER_LIMIT;			// Limit switch input
+	P1REN |= STEPPER_LIMIT;				// Enable Resistor
+	P1OUT |= STEPPER_LIMIT;				// Pull Up Resistor
 
 	// Init Stepper Struct
-	stepper.position = -1;
+	stepper.position = 60;
 	stepper.stepCount = 0;
+	stepper.setPos = -1000;
 	stepper.isEnabled = FALSE;
 	stepper.direction = -1;
 	stepper.flag = 0;
 
-	findHome();					// Zero position of stepper arm
+	findHome();							// Zero position of stepper arm
 }
-
-void goToStepPosition(int setPos){
-		if(stepper.position >= setPos){
-			_StepDirBackward();
-			while(stepper.position >= setPos){
-				stepper.isEnabled = TRUE;
-			}
-		}
-		else if(stepper.position <= setPos){
-			_StepDirForward();
-			while(stepper.position <= setPos){
-				stepper.isEnabled = TRUE;
-			}
-		}
-	stepper.isEnabled = FALSE;
-}//goToStepPosition()
 
 
 int findHome(void)
@@ -60,12 +45,13 @@ int findHome(void)
 	for(n=0;n<80;n++){
 		while(P1IN & STEPPER_LIMIT)
 		{
-			// While stepper limit not hit
+			// While stepper limit not hit TODO: Fix findHome() blocking loop
 		}
 	}//for debounce loop
 
 	stepper.isEnabled = FALSE;
 	stepper.position = 0;
+	stepper.setPos = 0;
 	_StepDirForward();
 
 	return 1;
@@ -78,6 +64,18 @@ int findHome(void)
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void Timer_A00 (void)
 {
+	if(stepper.position == stepper.setPos){
+		stepper.isEnabled = FALSE;
+		stepper.flag = 0;
+	}
+	if(stepper.position > stepper.setPos){
+		P1OUT &= ~STEPPER_DIR;
+		stepper.direction=BACKWARD;
+	}
+	if(stepper.position < stepper.setPos){
+		P1OUT |= STEPPER_DIR;
+		stepper.direction=FORWARD;
+	}
 
 	if(stepper.isEnabled)
 		P2OUT |= STEPPER_EN;		// Enable Motor

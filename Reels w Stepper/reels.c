@@ -5,7 +5,7 @@
 
 void initReel(){
 
-	//LED Indicator
+	//LED Indicator On
 	P2DIR |= BIT5;
 	P2OUT |= BIT5;
 
@@ -13,39 +13,32 @@ void initReel(){
 	P1DIR &= ~BUMP_STOP;				// Limit switch input
 	P1IE |=  BUMP_STOP;					// Interrupt enabled
 	P1IES |= BUMP_STOP;					// Hi/lo edge
-	P1REN |= BUMP_STOP;					// Enable Pull Up
+	P1REN |= BUMP_STOP;					// Enable Resistor
+	P1OUT |= BUMP_STOP;					// Set as Pull-up Resistor
 	P1IFG &= ~BUMP_STOP;				// IFG clear
 	// Click Count input
 	P2DIR &= ~CLICK_COUNTER;			// Click count input
 	P2IE |=  CLICK_COUNTER;				// Interrupt enabled
 	P2IES |= CLICK_COUNTER;				// Hi/lo edge
 	P2REN |= CLICK_COUNTER;				// Enable Pull Up
+	P2OUT |= CLICK_COUNTER;				// Set as Pull-up Resistor
 	P2IFG &= ~CLICK_COUNTER;			// IFG clear
 
-
-//	// Reel Motor PWM Timer Init
-//	TA1CCR0 = 40000;					// PWM Period 20ms
-//	TA1CCR2 = 0;						// Initial duty cycle of 0
-//	TA1CCTL2 = OUTMOD_7;				// Reset/Set
-//	TA1CTL = TASSEL_2 + MC_1 + ID_3;	// smclock, up mode, 2^3 divider
-
-	TA1CCTL0 = CCIE;
-	//PWM Out Init
-	TA1CCR0 = 40000;			// PWM period
-	TA1CCR2 = 0;
-	TA1CCTL2 = OUTMOD_7;
-	TA1CTL = TASSEL_2 + MC_1 + ID_3;
-	//PWM Outputs
-	P2DIR |= BIT4;		// Motor Control P2.4
-	P2SEL |= BIT4;
-
+	// Reel Motor PWM Timer Init
+	TA1CCTL0 = CCIE;					// Interrupt Enable
+	TA1CCR0 = 40000;					// PWM period 20ms
+	TA1CCR2 = 0;						// Initial duty cycle of 0
+	TA1CCTL2 = OUTMOD_7;				// Reset/Set
+	TA1CTL = TASSEL_2 + MC_1 + ID_3;	// smclock, up mode, 2^3 divider
+	P2DIR |= BIT4;						// Motor Control output on P2.4
+	P2SEL |= BIT4;						// Enable Timer A1.2 output on P2.4
 
 	// Init Globals
 	reel.currentClick = 0;
 	reel.setClick = 0;
 	reel.direction = STOPPED;
 	reel.flag = FALSE;
-	reel.currentWrap = 0;
+	reel.currentWrap = 1;
 	statusCode = 0;
 	interruptCode = 0;
 	allStopFlag = 1;
@@ -62,7 +55,7 @@ int goToClick(){
 	}
 	if(reel.timeout2 > REEL_TIMEOUT){
 		allStopFlag = 1;
-		return 3;		//Clicks missed, return timeout status
+		return 3;						//Clicks missed, return timeout status
 	}
 
 	// Check if limit switch is engaged, determine reel direction
@@ -85,10 +78,10 @@ int goToClick(){
 		reel.flag = 0;
 		reel.PWM = PWM_NEU;
 	}
-	if(P1IN & BUMP_STOP)	// If bump stop switch not hit
-		return 0;			// return Status Code: 0
+	if(P1IN & BUMP_STOP)				// If bump stop switch not hit
+		return 0;						// return Status Code: 0
 	else
-		interruptCode = 2;	// TODO: Comment Interrupt and Status Codes
+		interruptCode = 2;				// TODO: Comment Interrupt and Status Codes
 	return 5;
 
 }//goToClick()
@@ -108,11 +101,11 @@ __interrupt void Port_1(void)
 			reel.direction = 0;
 			reel.flag = 0;
 			statusCode = 0;
-			interruptCode = 1;  //Limit switch hit
+			interruptCode = 1;  		// Limit switch hit
 		}
 		else{
 			reel.flag = 0;
-			interruptCode = 2; // Limit switch error
+			interruptCode = 2; 			// Limit switch error
 		}
 
 		allStopFlag = 1;
@@ -139,10 +132,11 @@ __interrupt void Port_2(void)
 		allStopFlag = 1;
 		reel.flag = 0;
 		stepper.flag = 0;
-		interruptCode = 3; //Clicks out of bounds
+		interruptCode = 3; 				// Clicks out of bounds
 	}
 	if(reel.currentClick < MIN_CLICKS)
-		reel.currentClick = 0;
+		reel.currentClick = 0;			// Reset current click to zero if past lower limit
+
 
 	// Click hit, reset timeout counter
 	reel.timeout1 = 0;
@@ -150,9 +144,23 @@ __interrupt void Port_2(void)
 	// Calculate current wrap level on the reel
 	reel.currentWrap = (reel.currentClick/CLICKS_PER_WRAP) + 1;
 
+
+	if(reel.direction == DOWN){			// While reeling down:
+		if(reel.currentWrap % 2)		// On odd wraps, step forward
+			stepper.setPos++;
+		else							// On even wraps, step backward
+			stepper.setPos--;
+	}//if
+	else{								// While reeling up:
+		if(reel.currentWrap % 2)		// On odd wraps, step backward
+			stepper.setPos--;
+		else							// On even wraps, step forward
+			stepper.setPos++;
+	}//else
+
 	P2IFG &= ~CLICK_COUNTER;			// Clear interrupt
 
-}
+}//P2 hardware interrupt
 
 // Timer A1 interrupt service routine
 #pragma vector=TIMER1_A0_VECTOR
@@ -161,5 +169,5 @@ __interrupt void Timer_A10 (void)
 	// Set Reel Motor PWM duty cycle
 	TA1CCR2 = reel.PWM;
 
-	TA1CCTL0 &= ~CCIFG;		// Clear flag
-}
+	TA1CCTL0 &= ~CCIFG;					// Clear interrupt
+}//TA1 interrupt

@@ -9,31 +9,31 @@
 #define REELS_H_
 
 // Board Parameters
-#define BOARD_NAME 		"HReel"	// HReel or DReel
-#define BOARD_ADDRESS 	0x48	// Hose - 0x48, Data - 0x49
-#define CLICKS_PER_WRAP 35		// Hose - 40, Data - 35  ||  (Reel width)/(Cable OD)
-#define STEPS_PER_CLICK 400  	// Hose:(42k/CLICKS_PER_WRAP) Data:(14k/CLICKS_PER_WRAP)
-#define MOTOR_DOWN 		3500	// PWM high limit (3000-4000)
-#define MOTOR_UP 		2500	// PWM low limit  (2000-3000)
+#define BOARD_NAME 		"HReel"			// HReel or DReel
+#define BOARD_ADDRESS 	0x48			// Hose - 0x48, Data - 0x49
+#define CLICKS_PER_WRAP 40				// Hose - 40, Data - 35  ---  (Reel width)/(Cable OD)
+#define STEPS_PER_CLICK 1295  			// Hose:1295 Data: ??
+#define MOTOR_DOWN 		3300			// PWM high limit (3000-4000)
+#define MOTOR_UP 		2250			// PWM low limit  (2000-3000)
+#define REEL_TIMEOUT 	8				// Seconds allowable without sensed click
 
 
 // I/O Pins
-#define STEPPER_LIMIT 	BIT0	// P1.0
-#define STEPPER_DIR 	BIT3	// P1.3
-#define STEPPER_EN 		BIT2	// P2.2
-#define STEPPER_STEP 	BIT6	// P1.6
-#define BUMP_STOP 		BIT4	// P1.4
-#define CLICK_COUNTER 	BIT0	// P2.0
-#define MOTOR_SIGNAL 	BIT4	// P2.4
+#define STEPPER_LIMIT 	BIT0			// P1.0
+#define STEPPER_DIR 	BIT3			// P1.3
+#define STEPPER_EN 		BIT2			// P2.2
+#define STEPPER_STEP 	BIT6			// P1.6
+#define BUMP_STOP 		BIT4			// P1.4
+#define CLICK_COUNTER 	BIT0			// P2.0
+#define MOTOR_SIGNAL 	BIT4			// P2.4
 
 
 // Constants
-#define PWM_NEU  		3000	// PWM Neutral limit
-#define REEL_TIMEOUT 	8		// Seconds
-#define REEL_TIMEOUT_1 	50000	// Base for clicks timeout counter
-#define MAX_CLICKS 		999		//Upper bound of allowable clicks
-#define MIN_CLICKS 		-5		//Lower bound of allowable clicks
-#define LIMIT_SWITCH_MIN 5		//Max # of clicks w/o Limit Switch error code
+#define PWM_NEU  		3000			// PWM Neutral limit
+#define REEL_TIMEOUT_1 	50000			// Base for clicks timeout counter
+#define MAX_CLICKS 		999				//Upper bound of allowable clicks
+#define MIN_CLICKS 		-5				//Lower bound of allowable clicks
+#define LIMIT_SWITCH_MIN 5				//Max # of clicks w/o Limit Switch error code
 #define FORWARD 		1
 #define BACKWARD 		-1
 #define TRUE 			1
@@ -44,9 +44,9 @@
 
 // Macros
 // Set Stepper Direction Forward, 5ms delay
-#define _StepDirForward() P1OUT &= ~STEPPER_DIR; stepper.direction=FORWARD; __delay_cycles(80)
+#define _StepDirForward() P1OUT|=STEPPER_DIR;stepper.direction=FORWARD
 // Set Stepper Direction Backward, 5ms delay
-#define _StepDirBackward() P1OUT |= STEPPER_DIR; stepper.direction=BACKWARD; __delay_cycles(80)
+#define _StepDirBackward() P1OUT&=~STEPPER_DIR;stepper.direction=BACKWARD
 
 
 // Prototypes
@@ -83,9 +83,10 @@ struct Stepper{
 	volatile unsigned int
 	stepCount;
 
-	volatile int
+	volatile signed int
 	direction,
-	position;
+	position,
+	setPos;
 
 	volatile char
 	isEnabled,
