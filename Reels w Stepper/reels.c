@@ -58,9 +58,10 @@ int goToClick(){
 		return 3;						//Clicks missed, return timeout status
 	}
 
-	// Check if limit switch is engaged, determine reel direction
-	if((reel.currentClick != reel.setClick) && (P1IN & BUMP_STOP)){
-		if(reel.currentClick > reel.setClick){
+	// Determine reel direction
+	if(reel.currentClick != reel.setClick){
+		// Check if limit switch is engaged before reeling up
+		if((reel.currentClick > reel.setClick) && (P1IN & BUMP_STOP)){
 			reel.direction = UP;
 			reel.PWM = MOTOR_UP;
 			stepper.flag = 1;
