@@ -2,15 +2,11 @@
 #include "serial_handler.h"
 #include "servo_timer.h"
 
-#define RAMP_STEP_TIME 5
-#define RAMP_STEP_SIZE 250 // PWM step size
 
-
-#define STOPPED  22000		// PWM Neutral limit
+#define STOPPED  0		// PWM Neutral limit
 #define FORWARD	30000		// PWM high limit
 #define BACKWARD 15000	// PWM low limit
 #define CLICKS_MULTIPLIER 30	// 0-65
-#define RAMP_ON_STOP 1
 
 int str2num(char *,int );
 int input_handler (char *, char *);
@@ -18,9 +14,9 @@ void num2str(int ,char *,int );
 void all_stop_fun(void);
 void pump(int);
 
-volatile int ramp_flag, ramp_step_flag, pump_flag, pump_speed, valve_dir, ALL_STOP_FLAG;
+volatile int pump_flag, pump_speed, valve_dir, ALL_STOP_FLAG;
 volatile int set_pump_dir;
-volatile unsigned int ramp_timer, ramp_compare, pump_clicks, set_pump_clicks;
+volatile unsigned int pump_clicks, set_pump_clicks;
 
 
 int main(void) {
@@ -31,7 +27,7 @@ int main(void) {
 
 
 	i2c_slave_init(0x53);
-	volatile char identify[]="Valve2";
+	volatile char identify[]="Valve";
 	uart_init(4);   // set uart baud rate to 9600
 
 
@@ -45,10 +41,6 @@ int main(void) {
 	P2DIR |= BIT5 + BIT6;
 	P2OUT |= BIT5 + BIT6;
 
-	//Ramp Timer
-	TA1CCR0 = 0xFFFF;
-	TA1CTL = TASSEL_2 + MC_1 + ID_3;
-	TA1CCTL0 = CCIE;
 
 	//PWM Out Init
 	pwm_init(BIT0);
@@ -70,10 +62,6 @@ int main(void) {
 	motor[0] = pump_speed;
 
 	set_pump_dir = STOPPED;
-	ramp_timer = 0;
-	ramp_compare = 0;
-	ramp_step_flag = 0;
-	ramp_flag = 0;
 	ALL_STOP_FLAG = 1;
 
 	__bis_SR_register(GIE);
@@ -105,13 +93,13 @@ int main(void) {
 		}
 		if (!ALL_STOP_FLAG){
 			if(pump_flag)
-				pump(set_pump_dir);
+				pump_speed = set_pump_dir;
 		}
 		if (ALL_STOP_FLAG){
-			P2OUT |= BIT5;
+			P2OUT |= BIT5;		// Set LED on incase a blink stopped on a low
 			pump_flag=0;
-			ramp_flag = 0;
-			ramp_timer = 0;
+			pump_speed = STOPPED;
+			motor[0] = STOPPED;
 		}
 	}//
 }
@@ -119,12 +107,7 @@ int main(void) {
 int input_handler (char *instring, char *outstring){
 	int retval=0;
 	switch (instring[0]){
-	case 'R':	//Ramp Pump
 	case 'P':	//Manualc pump
-		if(instring[0]=='R')
-			ramp_flag = 1;
-		else
-			ramp_flag = 0;
 		pump_flag = 1;
 		pump_clicks = 0;
 		ALL_STOP_FLAG = 0;
@@ -145,6 +128,10 @@ int input_handler (char *instring, char *outstring){
 			P2OUT |= BIT0;
 		if(instring[1] == 'O')	// Open
 			P2OUT &= ~BIT0;
+		if(instring[1] == 'S'){	// Status of the valve
+			num2str((P2OUT & BIT0), outstring, 3);	// 1 if closed, 0 if open
+			retval = 3;
+		}
 		retval = 0;
 		break;
 	case 'I':		// Comms check
@@ -160,7 +147,6 @@ int input_handler (char *instring, char *outstring){
 		ALL_STOP_FLAG=1;
 		pump_flag=0;
 		retval = 0;
-		ramp_timer = 0;
 		pump_speed = STOPPED;
 		break;
 	default:
@@ -211,58 +197,24 @@ void all_stop_fun(void){
 	TA0CCR2 = 0;
 	TA1CCR1 = 0;
 	TA1CCR2 = 0;
+	motor[0] = 0;
 }
 
-void pump(int direction){
-
-	if(!ramp_flag){
-		pump_speed = direction;
-	}
-	else if(ramp_flag && ramp_step_flag){
-		if(pump_speed < direction){
-			pump_speed += RAMP_STEP_SIZE;
-			if(pump_speed > direction){
-				ramp_flag = 0;
-				pump_speed = direction;
-			}
-		}// if ramping Reverse->Stopped->Forward
-		else if(pump_speed > direction){
-			pump_speed -= RAMP_STEP_SIZE;
-			if(pump_speed < direction){
-				ramp_flag = 0;
-				pump_speed = direction;
-			}
-		}// else if ramping Forward->Stopped->Reverse
-		if(pump_speed == direction)
-			ramp_flag=0;
-		ramp_step_flag = 0;
-	}// else ramping
-
-}// pump()
 
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void TIMERA1_ISR(void)
 {
-	//Ramp Timer
-	if(pump_flag){
-		P2OUT ^= BIT5; // Flash status LED
-		ramp_compare++;
-		if(ramp_compare > 1){
-			// (ramp_compare == 30) == 1 second
-			ramp_timer++;
-			ramp_compare = 0;
-		}
-		if(ramp_timer > RAMP_STEP_TIME){
-			ramp_step_flag=1;
-			ramp_timer = 0;
-		}
-	}
+
 
 	motor[0] = pump_speed;
-	if(pump_speed == STOPPED && set_pump_dir == STOPPED){
+
+	if(pump_speed == STOPPED){
 		pump_flag = 0;
 		P2OUT |= BIT5;
 	}
+	if(pump_speed != STOPPED){
+			P2OUT ^= BIT5;			// Blink LED while pumping
+		}
 
 
 }
@@ -273,16 +225,15 @@ __interrupt void Port_1(void)
 {
 
 	if(P1IFG & BIT5){	// Photo gate edge hit
-		if(!ramp_flag)
-			pump_clicks++;
+
+		pump_clicks++;
 
 		if(pump_clicks > set_pump_clicks){
-			ramp_flag = RAMP_ON_STOP;
-			pump_flag = 1;
+			pump_flag = 0;
 			pump_clicks = 0;
 			set_pump_clicks = 0;
 			set_pump_dir = STOPPED;
-			ALL_STOP_FLAG = 0;
+			ALL_STOP_FLAG = 1;
 		}// if clicks met
 
 
