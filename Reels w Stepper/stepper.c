@@ -64,6 +64,13 @@ int findHome(void)
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void Timer_A00 (void)
 {
+	// Check to make sure set position isn't out of bounds
+	if(stepper.setPos < 0)
+		stepper.setPos = 0;
+	if(stepper.setPos > CLICKS_PER_WRAP)
+		stepper.setPos = CLICKS_PER_WRAP;
+
+	// Set direction of the stepper
 	if(stepper.position == stepper.setPos){
 		stepper.isEnabled = FALSE;
 		stepper.flag = 0;
