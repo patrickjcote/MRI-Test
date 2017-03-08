@@ -39,6 +39,8 @@ void initReel(){
 	reel.direction = STOPPED;
 	reel.flag = FALSE;
 	reel.currentWrap = 1;
+	reel.PWM_Up = PWM_NEU - MOTOR_UP;
+	reel.PWM_Down = PWM_NEU + MOTOR_DOWN;
 	statusCode = 0;
 	interruptCode = 0;
 	allStopFlag = 1;
@@ -63,13 +65,13 @@ int goToClick(){
 		// Check if limit switch is engaged before reeling up
 		if((reel.currentClick > reel.setClick) && (P1IN & BUMP_STOP)){
 			reel.direction = UP;
-			reel.PWM = MOTOR_UP;
+			reel.PWM = PWM_NEU - reel.PWM_Up;
 			stepper.flag = 1;
 			return reel.direction;
 		}
 		if(reel.currentClick < reel.setClick){
 			reel.direction = DOWN;
-			reel.PWM = MOTOR_DOWN;
+			reel.PWM = PWM_NEU + reel.PWM_Down;
 			stepper.flag = 1;
 			return reel.direction;
 		}

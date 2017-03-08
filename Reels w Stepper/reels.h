@@ -22,8 +22,8 @@
 #define BOARD_ADDRESS 	0x49			// Data - 0x49
 #define CLICKS_PER_WRAP 35				// Data - 35  ---  (Reel width)/(Cable OD)
 #define STEPS_PER_CLICK 400  			// Data: 400
-#define MOTOR_DOWN 		3300			// PWM high limit (3000-4000)
-#define MOTOR_UP 		2250			// PWM low limit  (2000-3000)
+#define MOTOR_DOWN 		300				// Default PWM high limit (% * 10)
+#define MOTOR_UP 		750				// Default PWM low limit  (% * 10)
 #define REEL_TIMEOUT 	8				// Seconds allowable without sensed click
 #endif
 
@@ -33,8 +33,8 @@
 #define BOARD_ADDRESS 	0x48			// Hose - 0x48
 #define CLICKS_PER_WRAP 40				// Hose - 40  ---  (Reel width)/(Cable OD)
 #define STEPS_PER_CLICK 1295  			// Hose:1295
-#define MOTOR_DOWN 		3300			// PWM high limit (3000-4000)
-#define MOTOR_UP 		2250			// PWM low limit  (2000-3000)
+#define MOTOR_DOWN 		300				// Default PWM high limit (%*10)
+#define MOTOR_UP 		500				// Default PWM low limit  (%*10)
 #define REEL_TIMEOUT 	8				// Seconds allowable without sensed click
 #endif
 
@@ -88,7 +88,9 @@ struct Reel{
 	volatile unsigned int
 	timeout1,
 	timeout2,
-	PWM;
+	PWM,
+	PWM_Up,
+	PWM_Down;
 
 	volatile int
 	currentClick,

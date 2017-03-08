@@ -111,6 +111,22 @@ int input_handler (char *instring, char *outstring){
 			allStopFlag=0;
 		}
 		break;
+	case 'M':
+		if (instring[1]=='D'){				// Set the motor up PWM signal
+			reel.PWM_Down=str2num(instring+2,3);
+		}
+		if (instring[1]=='U'){				// Set the motor down PWM signal
+			reel.PWM_Up=str2num(instring+2,3);
+		}
+		if (instring[1]=='E'){				// Return the motor down PWM signal
+			num2str(reel.PWM_Down,outstring,3);
+			retval=3;
+		}
+		if (instring[1]=='V'){				// Return the motor up PWM signal
+			num2str(reel.PWM_Up,outstring,3);
+			retval=3;
+		}
+		break;
 	case 'C':
 		if (instring[1]=='D'){				// Get clicks depth of reel
 			num2str(reel.currentClick,outstring,3);
@@ -168,7 +184,7 @@ int input_handler (char *instring, char *outstring){
 			retval=3;
 			break;
 		}
-		break; // end of Linear stage controlls
+		break; // end of Linear stage controls
 		case 'W':								// Return Current wrap of the reel
 			num2str(reel.currentWrap,outstring,3);
 			retval=3;
