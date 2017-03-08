@@ -10,8 +10,8 @@
 
 
 // Set which board is being programmed
-#define DATA_BOARD 		0
-#define HOSE_BOARD		1
+#define DATA_BOARD 		1
+#define HOSE_BOARD		0
 
 
 // ------------------------------------------------------------------------------
@@ -52,9 +52,9 @@
 // Constants
 #define PWM_NEU  		3000			// PWM Neutral limit
 #define REEL_TIMEOUT_1 	50000			// Base for clicks timeout counter
-#define MAX_CLICKS 		999				//Upper bound of allowable clicks
-#define MIN_CLICKS 		-5				//Lower bound of allowable clicks
-#define LIMIT_SWITCH_MIN 5				//Max # of clicks w/o Limit Switch error code
+#define MAX_CLICKS 		999				// Upper bound of allowable clicks
+#define MIN_CLICKS 		-5				// Lower bound of allowable clicks
+#define LIMIT_SWITCH_MIN 5				// Max # of clicks w/o Limit Switch error code
 #define FORWARD 		1
 #define BACKWARD 		-1
 #define TRUE 			1
