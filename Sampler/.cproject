@@ -65,7 +65,7 @@
 								<option id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.linkerID.LIBRARY.544858467" name="Include library file or command file as input (--library, -l)" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.linkerID.LIBRARY" valueType="libs">
 									<listOptionValue builtIn="false" value="&quot;libc.a&quot;"/>
 								</option>
-								<option id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.linkerID.XML_LINK_INFO.1416987250" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.linkerID.XML_LINK_INFO" value="&quot;${ProjName}_linkInfo.xml&quot;" valueType="string"/>
+								<option id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.linkerID.XML_LINK_INFO.1416987250" name="Detailed link information data-base into &lt;file&gt; (--xml_link_info, -xml_link_info)" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.linkerID.XML_LINK_INFO" value="&quot;${ProjName}_linkInfo.xml&quot;" valueType="string"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exeLinker.inputType__CMD_SRCS.185992939" name="Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exeLinker.inputType__CMD_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exeLinker.inputType__CMD2_SRCS.1296652238" name="Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exeLinker.inputType__CMD2_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exeLinker.inputType__GEN_CMDS.2086495962" name="Generated Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exeLinker.inputType__GEN_CMDS"/>
@@ -139,7 +139,7 @@
 								<option id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.linkerID.LIBRARY.1001797721" name="Include library file or command file as input (--library, -l)" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.linkerID.LIBRARY" valueType="libs">
 									<listOptionValue builtIn="false" value="&quot;libc.a&quot;"/>
 								</option>
-								<option id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.linkerID.XML_LINK_INFO.1698845671" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.linkerID.XML_LINK_INFO" value="&quot;${ProjName}_linkInfo.xml&quot;" valueType="string"/>
+								<option id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.linkerID.XML_LINK_INFO.1698845671" name="Detailed link information data-base into &lt;file&gt; (--xml_link_info, -xml_link_info)" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.linkerID.XML_LINK_INFO" value="&quot;${ProjName}_linkInfo.xml&quot;" valueType="string"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exeLinker.inputType__CMD_SRCS.1402927572" name="Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exeLinker.inputType__CMD_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exeLinker.inputType__CMD2_SRCS.871455195" name="Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exeLinker.inputType__CMD2_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exeLinker.inputType__GEN_CMDS.1421842960" name="Generated Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.MSP430_4.1.exeLinker.inputType__GEN_CMDS"/>

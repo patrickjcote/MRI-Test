@@ -5,8 +5,8 @@
  *      Author: BHill
  */
 
-#ifndef I2C_H_
-#define I2C_H_
+#ifndef REELS_I2C_H_
+#define REELS_I2C_H_
 void i2c_init(void);
 int i2c_rx_bb(char *,int, int);
 void wait_burn(int);
@@ -14,4 +14,4 @@ void wait_burn(int);
 
 
 
-#endif /* I2C_H_ */
+#endif /* REELS_I2C_H_ */

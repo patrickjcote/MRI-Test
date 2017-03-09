@@ -5,8 +5,8 @@
  *      Author: BHill
  */
 
-#ifndef SERIAL_HANDLER_H_
-#define SERIAL_HANDLER_H_
+#ifndef REELS_SERIAL_HANDLER_H_
+#define REELS_SERIAL_HANDLER_H_
 
 extern unsigned char tx_data_str[24], rx_data_str[24],rx_flag ,dec_str[7],eos_flag;
 extern char dec_char[6];
@@ -24,4 +24,4 @@ extern volatile int i2cTXData_ptr,i2cRXData_ptr,i2crxflag;
 extern volatile int i2cmode;
 
 
-#endif /* SERIAL_HANDLER_H_ */
+#endif /* REELS_SERIAL_HANDLER_H_ */

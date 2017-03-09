@@ -5,8 +5,8 @@
  *      Author: PCote
  */
 
-#ifndef REELS_H_
-#define REELS_H_
+#ifndef REELS_REELS_H_
+#define REELS_REELS_H_
 
 
 // Set which board is being programmed

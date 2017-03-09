@@ -2,8 +2,8 @@
  * sampler.h
  */
 
-#ifndef SAMPLER_H_
-#define SAMPLER_H_
+#ifndef SAMPLER_SAMPLER_H_
+#define SAMPLER_SAMPLER_H_
 
 /*Defining input/output ports.bit for sampler functionality*/
 #define PUMP	BIT3	//Define pump ON/OFF bit (P1.3)
