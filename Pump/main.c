@@ -27,7 +27,7 @@ int main(void) {
 
 
 	i2c_slave_init(0x53);
-	volatile char identify[]="Valve";
+	volatile char identify[]="Pump";
 	uart_init(4);   // set uart baud rate to 9600
 
 
@@ -56,10 +56,6 @@ int main(void) {
 	P1IES |= BIT5;				// 1.5 Hi/lo edge
 	P1IFG &= ~BIT5;				// P1.5 IFG clear
 
-	//Valve output
-	P2DIR |= BIT0;
-	P2OUT &= ~BIT0;
-
 	//Flags/variables init
 	pump_flag = 0;
 	pump_speed = STOPPED;
@@ -77,7 +73,7 @@ int main(void) {
 
 			eos_flag=0;
 			if (rx_data_str[0]=='I'){	// If it is the identifying character return the device ID
-				for (n=0;n<7;n++)
+				for (n=0;n<4;n++)
 					tx_data_str[n]=identify[n];
 				uart_write_string(0,7);
 			}
@@ -125,17 +121,6 @@ int input_handler (char *instring, char *outstring){
 
 		set_pump_clicks= CLICKS_MULTIPLIER * str2num(instring+2,3);
 
-		retval = 0;
-		break;
-	case 'V':	//Change valve Position
-		if(instring[1] == 'C')	// Close
-			P2OUT |= BIT0;
-		if(instring[1] == 'O')	// Open
-			P2OUT &= ~BIT0;
-		if(instring[1] == 'S'){	// Status of the valve
-			num2str((P2OUT & BIT0), outstring, 3);	// 1 if closed, 0 if open
-			retval = 3;
-		}
 		retval = 0;
 		break;
 	case 'I':		// Comms check
