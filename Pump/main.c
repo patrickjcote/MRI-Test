@@ -41,6 +41,10 @@ int main(void) {
 	P2DIR |= BIT5 + BIT6;
 	P2OUT |= BIT5 + BIT6;
 
+	// Pump speed set Timer
+	TA1CCR0 = 0xFFFF;
+	TA1CTL = TASSEL_2 + MC_1 + ID_3;
+	TA1CCTL0 = CCIE;
 
 	//PWM Out Init
 	pwm_init(BIT0);
@@ -213,8 +217,8 @@ __interrupt void TIMERA1_ISR(void)
 		P2OUT |= BIT5;
 	}
 	if(pump_speed != STOPPED){
-			P2OUT ^= BIT5;			// Blink LED while pumping
-		}
+		P2OUT ^= BIT5;			// Blink LED while pumping
+	}
 
 
 }
