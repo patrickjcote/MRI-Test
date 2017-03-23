@@ -113,17 +113,17 @@ int input_handler (char *instring, char *outstring){
 		break;
 	case 'M':
 		if (instring[1]=='D'){				// Set the motor up PWM signal
-			reel.PWM_Down=str2num(instring+2,3);
+			reel.PWM_Down = PMW_NEU + str2num(instring+2,3);
 		}
 		if (instring[1]=='U'){				// Set the motor down PWM signal
-			reel.PWM_Up=str2num(instring+2,3);
+			reel.PWM_Up = PWM_NEU - str2num(instring+2,3);
 		}
 		if (instring[1]=='E'){				// Return the motor down PWM signal
-			num2str(reel.PWM_Down,outstring,3);
+			num2str((reel.PWM_Down - PWM_NEU),outstring,3);
 			retval=3;
 		}
 		if (instring[1]=='V'){				// Return the motor up PWM signal
-			num2str(reel.PWM_Up,outstring,3);
+			num2str((PWM_NEU % reel.PWM_Up),outstring,3);
 			retval=3;
 		}
 		break;

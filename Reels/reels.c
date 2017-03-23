@@ -65,13 +65,13 @@ int goToClick(){
 		// Check if limit switch is engaged before reeling up
 		if((reel.currentClick > reel.setClick) && (P1IN & BUMP_STOP)){
 			reel.direction = UP;
-			reel.PWM = PWM_NEU - reel.PWM_Up;
+			reel.PWM = reel.PWM_Up;
 			stepper.flag = 1;
 			return reel.direction;
 		}
 		if(reel.currentClick < reel.setClick){
 			reel.direction = DOWN;
-			reel.PWM = PWM_NEU + reel.PWM_Down;
+			reel.PWM = reel.PWM_Down;
 			stepper.flag = 1;
 			return reel.direction;
 		}
