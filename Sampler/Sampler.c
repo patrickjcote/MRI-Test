@@ -41,7 +41,7 @@ void pump_water(int pump_dir, int pump_vol){
 		if(pump_vol > 800)				//check if sample volume is greater than 800ml
 			pump_vol = 800;				//limit max sample volume to 800ml to avoid overflow
 
-		clicks = pump_vol * volscale;	//pump revolutions corresponding to desired sample volume
+		clicks = pump_vol * VOL_SCALE;	// [2mL]*[clicks]/[2mL] = clicks needed to pump desired vol
 
 		if (pump_dir)					//check desired pump direction - if forward (1):
 			P1OUT |= PUMPD;				//sample

@@ -5,14 +5,16 @@
 #ifndef SAMPLER_SAMPLER_H_
 #define SAMPLER_SAMPLER_H_
 
+
+
 /*Defining input/output ports.bit for sampler functionality*/
-#define PUMP	BIT3	//Define pump ON/OFF bit (P1.3)
-#define PUMPD	BIT4	//Define pump direction bit (P1.4)
-#define PUMPG	BIT5	//Define pump photogate bit (P1.5)
-#define volscale  0.43	//Define number of clicks per milliliter of the pump
-#define ARMR	BIT0	//Define arm movement direction Reverse (P2.0)
-#define ARMF	BIT1	//Define arm movement direction Forward (P2.1)
-#define ARMPG	BIT3	//Define arm photogate bit (P2.2)
+#define PUMP		BIT3	//Define pump ON/OFF bit (P1.3)
+#define PUMPD		BIT4	//Define pump direction bit (P1.4)
+#define PUMPG		BIT5	//Define pump photogate bit (P1.5)
+#define VOL_SCALE 	1.45334	//Define pumping scalar [clicks/(2mL)]
+#define ARMR		BIT0	//Define arm movement direction Reverse (P2.0)
+#define ARMF		BIT1	//Define arm movement direction Forward (P2.1)
+#define ARMPG		BIT3	//Define arm photogate bit (P2.2)
 
 
 /*External Variables Initialization:
